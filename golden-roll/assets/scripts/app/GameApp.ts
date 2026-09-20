@@ -22,8 +22,10 @@ import {
     ResolutionPolicy,
     Widget,
 } from 'cc';
+import { AvatarAnimator } from '../avatar/AvatarAnimator';
+import { AvatarPlayMode } from '../avatar/AvatarSkinData';
+import { AvatarSkinManager } from '../avatar/AvatarSkinManager';
 import { GameModel } from '../core/GameModel';
-import { resolveSkin } from '../core/Skin';
 import { Joystick } from '../ui/Joystick';
 
 const { ccclass } = _decorator;
@@ -88,6 +90,7 @@ export class GameApp extends Component {
     private progressBar: Node = null!;
     private progressLabel: Label | null = null;
     private homeGoldLabel: Label | null = null;
+    private homeAvatar: AvatarAnimator | null = null;
     private gameFont: Font | null = null;
     private readonly progressTrackWidth = 500;
 
@@ -182,6 +185,8 @@ export class GameApp extends Component {
         }
         this.phase = 'toHome';
         this.home.active = true;
+        this.bgHome.active = true;
+        this.backdrop.active = true;
         this._setOpacity(this.home, 0);
         this._fade(this.loading, 0, 0.42, 0, 'sineIn', () => {
             this.loading.active = false;
@@ -189,8 +194,25 @@ export class GameApp extends Component {
         this._fade(this.bgLoading, 0, 0.72, 0.08, 'sineInOut');
         this._fade(this.bgHome, 255, 0.72, 0.08, 'sineInOut');
         this._fade(this.home, 255, 0.5, 0.32, 'sineOut', () => {
-            this.phase = 'home';
+            this._finishArriveHome();
         });
+        this.unschedule(this._finishArriveHome);
+        this.scheduleOnce(this._finishArriveHome, 1.1);
+    }
+
+    private _finishArriveHome(): void {
+        this.unschedule(this._finishArriveHome);
+        this.loading.active = false;
+        this.home.active = true;
+        this.bgHome.active = true;
+        this.backdrop.active = true;
+        this._setOpacity(this.loading, 0);
+        this._setOpacity(this.bgLoading, 0);
+        this._setOpacity(this.bgHome, 255);
+        this._setOpacity(this.home, 255);
+        this.phase = 'home';
+        this._refreshHomeWallet();
+        this._applySkin();
     }
 
     private _enterHome(): void {
@@ -366,6 +388,7 @@ export class GameApp extends Component {
     }
 
     private _loadArt(): void {
+        AvatarSkinManager.instance.load(() => this._applySkin());
         (Object.keys(ART) as Array<keyof typeof ART>).forEach((key) => {
             resources.load(ART[key], SpriteFrame, (err: Error | null, sf: SpriteFrame) => {
                 if (err || !sf) {
@@ -450,7 +473,7 @@ export class GameApp extends Component {
             beetle: [this.loading, 'Beetle'],
             progress: [this.loading, 'ProgressPanel'],
             gold: [this.home, 'GoldBoard'],
-            frame: [this.home, 'PortraitFrame'],
+            frame: [this.home, 'AvatarFrame'],
             start: [this.home, 'StartBtn'],
             homeTitle: [this.home, 'HomeTitle'],
             decorLeft: [this.home, 'DecorLeft'],
@@ -643,22 +666,14 @@ export class GameApp extends Component {
         shop.addChild(shopLabel);
         side.addChild(shop);
 
-        const portrait = this._ui('PortraitRoot', 204, 202);
+        const portrait = this._ui('AvatarRoot', 204, 202);
         portrait.setPosition(0, 72, 0);
         this._shade(portrait, 148, 20, -88);
-        const fill = this._ui('PortraitFill', 148, 148);
-        const fillG = fill.addComponent(Graphics);
-        fillG.fillColor = new Color(236, 214, 170);
-        fillG.circle(0, 0, 74);
-        fillG.fill();
-        const face = this._ui('PortraitFace', 136, 136);
-        face.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        const frame = this._ui('PortraitFrame', 204, 202);
+        const frame = this._ui('AvatarFrame', 204, 202);
         frame.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        portrait.addChild(fill);
-        portrait.addChild(face);
         portrait.addChild(frame);
         side.addChild(portrait);
+        this.homeAvatar = null;
 
         const start = this._board('StartBtn', 388, 384);
         this.home.addChild(start);
@@ -678,6 +693,14 @@ export class GameApp extends Component {
         this._prop('RockLg', 126, 84, { left: 20, bottom: 0 });
         this._prop('RockSm', 78, 40, { right: 64, bottom: 2 });
 
+        const portraitNode = this._find(this.home, 'AvatarRoot');
+        if (portraitNode) {
+            const animator = portraitNode.getComponent(AvatarAnimator) || portraitNode.addComponent(AvatarAnimator);
+            animator.skinId = this.model.skinId;
+            animator.playMode = AvatarPlayMode.Full;
+            animator.clickEnabled = true;
+            this.homeAvatar = animator;
+        }
         this._applySkin();
     }
 
@@ -941,16 +964,9 @@ export class GameApp extends Component {
     }
 
     private _applySkin(): void {
-        const face = this._find(this.home, 'PortraitFace');
-        if (!face) {
+        if (!this.homeAvatar) {
             return;
         }
-        const skin = resolveSkin(this.model.skinId);
-        resources.load(skin.portrait, SpriteFrame, (err: Error | null, sf: SpriteFrame) => {
-            if (err || !sf) {
-                return;
-            }
-            this._applySprite(face, sf);
-        });
+        this.homeAvatar.setSkin(this.model.skinId);
     }
 }
