@@ -4,103 +4,120 @@ import { SpriteFrame } from 'cc';
 export enum AvatarState {
     Idle = 0,
     Blink = 1,
-    Bubble = 2,
-    Expression = 3,
-    Click = 4,
+    Expression = 2,
+    Click = 3,
 }
 
-/** Full：首页完整动作；Lite：商店列表只保留呼吸 + 眨眼。 */
+/** Full：首页完整动作；Lite：只保留呼吸 + 眨眼。 */
 export enum AvatarPlayMode {
     Full = 0,
     Lite = 1,
 }
 
-export type AvatarExpression = 'happy' | 'surprised' | 'angry';
+export type AvatarExpression = 'happy' | 'surprised' | 'wink';
 
-export interface SkinAnimationData {
+export type AvatarSheetId = 'skins' | 'faces';
+
+export type AvatarPartId =
+    | 'eyeOpenL'
+    | 'eyeOpenR'
+    | 'lidClosedL'
+    | 'lidClosedR'
+    | 'lidHalfL'
+    | 'lidHalfR'
+    | 'eyeStarL'
+    | 'eyeStarR'
+    | 'eyeHeartL'
+    | 'eyeHeartR'
+    | 'browL'
+    | 'browR'
+    | 'mouthSmile'
+    | 'mouthHappy'
+    | 'mouthOh'
+    | 'mouthGrin';
+
+export interface AtlasRect {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+}
+
+export interface AvatarPartSet {
     id: string;
-    idleFrames: SpriteFrame[];
-    bubbleFrames: SpriteFrame[];
-    swayFrames?: SpriteFrame[];
-    blinkFrames: SpriteFrame[];
-    happyFrames?: SpriteFrame[];
-    surprisedFrames?: SpriteFrame[];
-    angryFrames?: SpriteFrame[];
-    clickFrames: SpriteFrame[];
-    /** 大帽子皮肤可到 2°，其它约 1.5°。 */
-    hatSwayMax?: number;
-    /** 泡泡已画进角色帧时隐藏独立 BubbleFX。 */
-    bubbleInSheet?: boolean;
+    portrait: SpriteFrame;
+    parts: Partial<Record<AvatarPartId, SpriteFrame>>;
 }
 
 export interface AvatarSkinDef {
     id: string;
     name: string;
-    row: number;
-    hatSwayMax: number;
+    rect: AtlasRect;
 }
 
 export const DEFAULT_AVATAR_SKIN_ID = 'cowboy';
 
-export const AVATAR_SHEET_PATH = 'ui/avatars/role-sheet/spriteFrame';
+export const AVATAR_SHEET_PATHS: Record<AvatarSheetId, string> = {
+    skins: 'ui/avatars/skins/spriteFrame',
+    faces: 'ui/avatars/faces/spriteFrame',
+};
 
-/**
- * role-sheet.png（1448×1086）布局：
- * 左侧中文名 + 顶栏分组标题不参与切图。
- * 每行 4 组 × 6 帧：bubble / sway / blink / click。
- */
-export const AVATAR_SHEET_GROUPS = [
-    { key: 'bubble', x: 90, w: 356 },
-    { key: 'sway', x: 448, w: 304 },
-    { key: 'blink', x: 760, w: 326 },
-    { key: 'click', x: 1096, w: 326 },
-] as const;
+export const AVATAR_DISPLAY = 1;
+export const AVATAR_RIG_SCALE = AVATAR_DISPLAY;
 
-/**
- * 必须小于最密一组的列距（摇摆组 304/6 ≈ 50.7）。
- * 比列距更宽会切进左右相邻帧，播放时就会叠出多个角色。
- */
-export const AVATAR_SHEET_CELL_W = 50;
-export const AVATAR_SHEET_SLICE_VERSION = 2;
-
-export const AVATAR_SHEET_ROWS: ReadonlyArray<{ y: number; h: number }> = [
-    { y: 44, h: 68 },
-    { y: 122, h: 70 },
-    { y: 202, h: 68 },
-    { y: 284, h: 70 },
-    { y: 365, h: 74 },
-    { y: 447, h: 74 },
-    { y: 532, h: 72 },
-    { y: 615, h: 78 },
-    { y: 700, h: 79 },
-    { y: 784, h: 77 },
-    { y: 870, h: 82 },
-    { y: 966, h: 77 },
-];
-
+/** 整身皮肤，不含标签、不含拆开的头和身体。 */
 export const AVATAR_SKINS: readonly AvatarSkinDef[] = [
-    { id: 'cowboy', name: '经典牛仔仔', row: 0, hatSwayMax: 2 },
-    { id: 'sheriff', name: '白帽警长', row: 1, hatSwayMax: 2 },
-    { id: 'cowgirl', name: '粉色女牛仔', row: 2, hatSwayMax: 2 },
-    { id: 'bandit', name: '黑帽盗匪', row: 3, hatSwayMax: 2 },
-    { id: 'mexican', name: '墨西哥风', row: 4, hatSwayMax: 2 },
-    { id: 'indian', name: '印第安安', row: 5, hatSwayMax: 2 },
-    { id: 'pilot', name: '飞行员', row: 6, hatSwayMax: 1.5 },
-    { id: 'panda', name: '熊猫仔', row: 7, hatSwayMax: 1.5 },
-    { id: 'dinosaur', name: '恐龙装', row: 8, hatSwayMax: 1.5 },
-    { id: 'cow', name: '奶牛装', row: 9, hatSwayMax: 1.5 },
-    { id: 'rabbit', name: '兔兔装', row: 10, hatSwayMax: 1.6 },
-    { id: 'monster', name: '怪兽装', row: 11, hatSwayMax: 1.5 },
+    { id: 'cowboy', name: '经典牛仔', rect: { x: 23, y: 15, w: 212, h: 188 } },
+    { id: 'sheriff', name: '警长', rect: { x: 255, y: 15, w: 209, h: 188 } },
+    { id: 'pilot', name: '飞行员', rect: { x: 472, y: 18, w: 186, h: 185 } },
+    { id: 'steampunk', name: '蒸汽朋克', rect: { x: 673, y: 8, w: 196, h: 195 } },
+    { id: 'mexican', name: '墨西哥', rect: { x: 887, y: 7, w: 206, h: 196 } },
+    { id: 'desert', name: '沙漠旅人', rect: { x: 1104, y: 1, w: 208, h: 202 } },
+    { id: 'miner', name: '矿工', rect: { x: 1334, y: 20, w: 180, h: 183 } },
+    { id: 'tribe', name: '部落', rect: { x: 176, y: 256, w: 210, h: 200 } },
+    { id: 'astronaut', name: '宇航员', rect: { x: 422, y: 262, w: 205, h: 196 } },
+    { id: 'pirate', name: '海盗', rect: { x: 668, y: 259, w: 217, h: 198 } },
+    { id: 'cactus', name: '仙人掌', rect: { x: 909, y: 267, w: 215, h: 190 } },
+    { id: 'king', name: '国王', rect: { x: 1167, y: 257, w: 209, h: 200 } },
 ];
 
-export const AVATAR_FPS = {
-    idle: 7,
-    bubble: 8,
-    sway: 7,
-    blink: 10,
-    expression: 7,
-    click: 12,
-} as const;
+/** image1 表情表。 */
+export const AVATAR_FACE_SLICES: Record<AvatarPartId, AtlasRect> = {
+    eyeOpenL: { x: 514, y: 225, w: 67, h: 82 },
+    eyeOpenR: { x: 601, y: 225, w: 67, h: 82 },
+    lidClosedL: { x: 693, y: 247, w: 69, h: 43 },
+    lidClosedR: { x: 784, y: 249, w: 67, h: 41 },
+    lidHalfL: { x: 867, y: 251, w: 71, h: 55 },
+    lidHalfR: { x: 960, y: 249, w: 71, h: 56 },
+    eyeStarL: { x: 889, y: 403, w: 67, h: 79 },
+    eyeStarR: { x: 973, y: 403, w: 67, h: 78 },
+    eyeHeartL: { x: 1066, y: 402, w: 76, h: 74 },
+    eyeHeartR: { x: 1149, y: 402, w: 77, h: 74 },
+    browL: { x: 35, y: 772, w: 72, h: 36 },
+    browR: { x: 142, y: 770, w: 72, h: 38 },
+    mouthSmile: { x: 66, y: 947, w: 113, h: 27 },
+    mouthHappy: { x: 474, y: 922, w: 107, h: 65 },
+    mouthOh: { x: 1105, y: 908, w: 66, h: 78 },
+    mouthGrin: { x: 666, y: 925, w: 121, h: 63 },
+};
+
+export interface PartPose {
+    x: number;
+    y: number;
+    scale: number;
+    anchorX: number;
+    anchorY: number;
+}
+
+export const AVATAR_POSE: Record<string, PartPose> = {
+    rig: { x: 0, y: 8, scale: 1, anchorX: 0.5, anchorY: 0.5 },
+    portrait: { x: 0, y: -4, scale: 0.7, anchorX: 0.5, anchorY: 0.42 },
+    browL: { x: -13, y: 18, scale: 0.34, anchorX: 0.5, anchorY: 0.5 },
+    browR: { x: 13, y: 18, scale: 0.34, anchorX: 0.5, anchorY: 0.5 },
+    eyeL: { x: -13, y: 8, scale: 0.38, anchorX: 0.5, anchorY: 0.5 },
+    eyeR: { x: 13, y: 8, scale: 0.38, anchorX: 0.5, anchorY: 0.5 },
+    mouth: { x: 0, y: -8, scale: 0.38, anchorX: 0.5, anchorY: 0.5 },
+};
 
 export function randRange(min: number, max: number): number {
     return min + Math.random() * (max - min);
