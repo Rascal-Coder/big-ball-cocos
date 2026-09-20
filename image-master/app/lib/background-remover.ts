@@ -1,0 +1,926 @@
+export interface RemoveBackgroundOptions {
+  tolerance: number; // 0-100
+  contiguousOnly: boolean;
+  targetColor?: { r: number; g: number; b: number };
+  feather?: number; // 0-20 pixels
+  antiAlias?: boolean;
+  chromaKey?: boolean;
+  seedPoints?: { x: number; y: number }[];
+  edgeShrink?: number; // 0-20 pixels
+}
+
+export type AIModel = "isnet" | "isnet_fp16" | "isnet_quint8";
+
+export type ChannelSource = "red" | "green" | "blue" | "luminance" | "saturation";
+
+export interface ChannelMattingOptions {
+  channel: ChannelSource;
+  minThreshold: number; // 0-255, channel values below → transparent
+  maxThreshold: number; // 0-255, channel values above → transparent
+  invert: boolean;
+  feather?: number;
+  edgeShrink?: number;
+}
+
+export interface AIRemoveBackgroundOptions {
+  model: AIModel;
+  refineEdges?: boolean;
+  edgeShrink?: number; // 0-20 pixels
+  onProgress?: (phase: string, progress: number) => void;
+}
+
+export interface RemoveResult {
+  name: string;
+  blob: Blob;
+  width: number;
+  height: number;
+  warning?: string;
+}
+
+type RGBColor = { r: number; g: number; b: number };
+type ChromaKeyChannel = "red" | "green" | "blue";
+
+/**
+ * Remove background color from image
+ */
+export async function removeBackground(
+  file: File,
+  options: RemoveBackgroundOptions
+): Promise<RemoveResult> {
+  const {
+    tolerance,
+    contiguousOnly,
+    targetColor,
+    feather = 0,
+    antiAlias = true,
+    chromaKey = true,
+    seedPoints,
+    edgeShrink = 0,
+  } = options;
+
+  const img = await loadImage(file);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+
+  canvas.width = img.width;
+  canvas.height = img.height;
+  ctx.drawImage(img, 0, 0);
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const { width, height, data } = imageData;
+
+  const topLeftColor = {
+    r: data[0],
+    g: data[1],
+    b: data[2],
+  };
+  const bgColor = targetColor ?? topLeftColor;
+
+  const maxDistance = 441.67;
+  const toleranceDistance = (tolerance / 100) * maxDistance;
+
+  const visited = new Uint8Array(width * height);
+
+  if (contiguousOnly) {
+    for (let x = 0; x < width; x++) {
+      floodFillRemove(
+        data, visited, width, height, x, 0, bgColor, toleranceDistance
+      );
+      floodFillRemove(
+        data, visited, width, height, x, height - 1, bgColor, toleranceDistance
+      );
+    }
+    for (let y = 1; y < height - 1; y++) {
+      floodFillRemove(
+        data, visited, width, height, 0, y, bgColor, toleranceDistance
+      );
+      floodFillRemove(
+        data, visited, width, height, width - 1, y, bgColor, toleranceDistance
+      );
+    }
+  } else {
+    if (antiAlias) {
+      const innerT = toleranceDistance * 0.85;
+      const outerT = toleranceDistance * 1.15;
+      for (let i = 0; i < data.length; i += 4) {
+        const dist = colorDistance(
+          { r: data[i], g: data[i + 1], b: data[i + 2] },
+          bgColor
+        );
+        if (dist <= innerT) {
+          data[i + 3] = 0;
+          visited[i / 4] = 1;
+        } else if (dist < outerT) {
+          const t = (dist - innerT) / (outerT - innerT);
+          const smooth = t * t * (3 - 2 * t);
+          data[i + 3] = Math.round(data[i + 3] * smooth);
+        }
+      }
+    } else {
+      for (let i = 0; i < data.length; i += 4) {
+        if (
+          colorDistance(
+            { r: data[i], g: data[i + 1], b: data[i + 2] },
+            bgColor
+          ) <= toleranceDistance
+        ) {
+          data[i + 3] = 0;
+          visited[i / 4] = 1;
+        }
+      }
+    }
+  }
+
+  if (seedPoints && seedPoints.length > 0) {
+    for (const pt of seedPoints) {
+      if (pt.x < 0 || pt.x >= width || pt.y < 0 || pt.y >= height) continue;
+      const seedIdx = (pt.y * width + pt.x) * 4;
+      const seedColor = {
+        r: data[seedIdx],
+        g: data[seedIdx + 1],
+        b: data[seedIdx + 2],
+      };
+      floodFillRemove(
+        data, visited, width, height, pt.x, pt.y, seedColor, toleranceDistance
+      );
+    }
+  }
+
+  if (antiAlias) {
+    applyBoundarySoftening(
+      data, visited, width, height, bgColor, toleranceDistance
+    );
+    gaussianBlurAlpha(data, width, height, 0.8);
+  }
+
+  if (chromaKey) {
+    applyChromaKeyRefinement(
+      data,
+      width,
+      height,
+      bgColor,
+      toleranceDistance,
+      visited
+    );
+  }
+
+  if (edgeShrink > 0) {
+    applyEdgeShrink(data, width, height, edgeShrink);
+  }
+
+  if (feather > 0) {
+    applyFeather(data, width, height, feather);
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+
+  const blob = await canvasToBlob(canvas);
+  return {
+    name: file.name.replace(/\.[^/.]+$/, "") + ".png",
+    blob,
+    width: canvas.width,
+    height: canvas.height,
+  };
+}
+
+/**
+ * Get pixel color at position from image file
+ */
+export async function getPixelColor(
+  file: File,
+  x: number,
+  y: number
+): Promise<{ r: number; g: number; b: number }> {
+  const img = await loadImage(file);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+
+  canvas.width = img.width;
+  canvas.height = img.height;
+  ctx.drawImage(img, 0, 0);
+
+  const pixel = ctx.getImageData(x, y, 1, 1).data;
+  return { r: pixel[0], g: pixel[1], b: pixel[2] };
+}
+
+function colorDistance(
+  c1: RGBColor,
+  c2: RGBColor
+): number {
+  const dr = c1.r - c2.r;
+  const dg = c1.g - c2.g;
+  const db = c1.b - c2.b;
+  return Math.sqrt(dr * dr + dg * dg + db * db);
+}
+
+export function detectChromaKeyChannel(bgColor: RGBColor): ChromaKeyChannel | null {
+  const channels: Array<{ key: ChromaKeyChannel; value: number }> = [
+    { key: "red", value: bgColor.r },
+    { key: "green", value: bgColor.g },
+    { key: "blue", value: bgColor.b },
+  ];
+  channels.sort((a, b) => b.value - a.value);
+
+  const dominant = channels[0];
+  const runnerUp = channels[1];
+  if (!dominant || !runnerUp) return null;
+
+  const dominance = dominant.value - runnerUp.value;
+  if (dominant.value < 64 || dominance < 24) {
+    return null;
+  }
+
+  return dominant.key;
+}
+
+export function getChromaKeyAlpha({
+  pixel,
+  bgColor,
+  toleranceDistance,
+  originalAlpha,
+}: {
+  pixel: RGBColor;
+  bgColor: RGBColor;
+  toleranceDistance: number;
+  originalAlpha: number;
+}): number {
+  const channel = detectChromaKeyChannel(bgColor);
+  if (!channel || originalAlpha <= 0) {
+    return originalAlpha;
+  }
+
+  const backgroundDominance = getChannelDominance(bgColor, channel);
+  if (backgroundDominance < 24) {
+    return originalAlpha;
+  }
+
+  const pixelDominance = Math.max(0, getChannelDominance(pixel, channel));
+  const distanceLimit = Math.max(toleranceDistance * 1.35, 48);
+  const colorMatch = clamp01(1 - colorDistance(pixel, bgColor) / distanceLimit);
+  const dominanceMatch = clamp01(pixelDominance / backgroundDominance);
+  const removalSignal = colorMatch * dominanceMatch;
+
+  if (removalSignal <= 0.12) {
+    return originalAlpha;
+  }
+
+  const alphaFactor = 1 - smoothstep(0.12, 0.88, removalSignal);
+  return Math.max(0, Math.min(255, Math.round(originalAlpha * alphaFactor)));
+}
+
+/**
+ * Erode the alpha mask inward by `radius` pixels using distance transform.
+ * Pixels within `radius` distance of a transparent pixel get their alpha
+ * reduced or zeroed, effectively shrinking the visible edge.
+ */
+function applyEdgeShrink(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  radius: number
+): void {
+  const len = width * height;
+  const distToTransparent = new Float32Array(len);
+  distToTransparent.fill(Infinity);
+
+  for (let i = 0; i < len; i++) {
+    if (data[i * 4 + 3] === 0) {
+      distToTransparent[i] = 0;
+    }
+  }
+
+  // Forward pass
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = y * width + x;
+      if (distToTransparent[i] === 0) continue;
+      if (x > 0)
+        distToTransparent[i] = Math.min(distToTransparent[i], distToTransparent[i - 1] + 1);
+      if (y > 0)
+        distToTransparent[i] = Math.min(distToTransparent[i], distToTransparent[(y - 1) * width + x] + 1);
+      if (x > 0 && y > 0)
+        distToTransparent[i] = Math.min(distToTransparent[i], distToTransparent[(y - 1) * width + x - 1] + 1.414);
+      if (x < width - 1 && y > 0)
+        distToTransparent[i] = Math.min(distToTransparent[i], distToTransparent[(y - 1) * width + x + 1] + 1.414);
+    }
+  }
+
+  // Backward pass
+  for (let y = height - 1; y >= 0; y--) {
+    for (let x = width - 1; x >= 0; x--) {
+      const i = y * width + x;
+      if (distToTransparent[i] === 0) continue;
+      if (x < width - 1)
+        distToTransparent[i] = Math.min(distToTransparent[i], distToTransparent[i + 1] + 1);
+      if (y < height - 1)
+        distToTransparent[i] = Math.min(distToTransparent[i], distToTransparent[(y + 1) * width + x] + 1);
+      if (x < width - 1 && y < height - 1)
+        distToTransparent[i] = Math.min(distToTransparent[i], distToTransparent[(y + 1) * width + x + 1] + 1.414);
+      if (x > 0 && y < height - 1)
+        distToTransparent[i] = Math.min(distToTransparent[i], distToTransparent[(y + 1) * width + x - 1] + 1.414);
+    }
+  }
+
+  // Shrink: fully transparent within radius, smooth falloff at the edge
+  const softZone = Math.min(1, radius * 0.5);
+  for (let i = 0; i < len; i++) {
+    const d = distToTransparent[i];
+    if (d >= radius) continue;
+    if (d <= radius - softZone) {
+      data[i * 4 + 3] = 0;
+    } else {
+      const t = (d - (radius - softZone)) / softZone;
+      const smooth = t * t * (3 - 2 * t);
+      data[i * 4 + 3] = Math.round(data[i * 4 + 3] * smooth);
+    }
+  }
+}
+
+/**
+ * Apply feather effect to smooth edges between transparent and opaque areas
+ */
+function applyFeather(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  radius: number
+): void {
+  // Extract alpha channel
+  const alpha = new Float32Array(width * height);
+  for (let i = 0; i < alpha.length; i++) {
+    alpha[i] = data[i * 4 + 3];
+  }
+
+  // Calculate distance from each opaque pixel to nearest transparent pixel
+  const distance = new Float32Array(width * height);
+  distance.fill(Infinity);
+
+  // Initialize edge pixels with distance 0
+  for (let i = 0; i < alpha.length; i++) {
+    if (alpha[i] === 0) {
+      distance[i] = 0;
+    }
+  }
+
+  // Multi-pass distance transform (approximation)
+  const passes = Math.ceil(radius * 1.5);
+  for (let pass = 0; pass < passes; pass++) {
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = y * width + x;
+        if (distance[idx] === 0) continue;
+
+        let minDist = distance[idx];
+        // Check 8-connected neighbors
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+              const neighborDist = distance[ny * width + nx];
+              const stepDist = dx !== 0 && dy !== 0 ? 1.414 : 1;
+              minDist = Math.min(minDist, neighborDist + stepDist);
+            }
+          }
+        }
+        distance[idx] = minDist;
+      }
+    }
+    // Reverse pass for better accuracy
+    for (let y = height - 1; y >= 0; y--) {
+      for (let x = width - 1; x >= 0; x--) {
+        const idx = y * width + x;
+        if (distance[idx] === 0) continue;
+
+        let minDist = distance[idx];
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+              const neighborDist = distance[ny * width + nx];
+              const stepDist = dx !== 0 && dy !== 0 ? 1.414 : 1;
+              minDist = Math.min(minDist, neighborDist + stepDist);
+            }
+          }
+        }
+        distance[idx] = minDist;
+      }
+    }
+  }
+
+  // Apply feather based on distance
+  for (let i = 0; i < alpha.length; i++) {
+    if (alpha[i] > 0 && distance[i] < radius) {
+      // Smooth falloff using cosine interpolation
+      const t = distance[i] / radius;
+      const falloff = (1 - Math.cos(t * Math.PI)) / 2;
+      data[i * 4 + 3] = Math.round(alpha[i] * falloff);
+    }
+  }
+}
+
+/**
+ * Smooth the boundary between flood-fill-removed region and foreground
+ * using distance transform + color distance for soft alpha transition.
+ */
+function applyBoundarySoftening(
+  data: Uint8ClampedArray,
+  visited: Uint8Array,
+  width: number,
+  height: number,
+  bgColor: { r: number; g: number; b: number },
+  toleranceDistance: number
+): void {
+  const len = width * height;
+  const band = 2.5;
+  const outerTolerance = toleranceDistance * 1.5;
+  const distToRemoved = distanceToMask(visited, width, height);
+
+  for (let i = 0; i < len; i++) {
+    if (visited[i]) continue;
+    if (distToRemoved[i] > band) continue;
+
+    const pixelIdx = i * 4;
+    const dist = colorDistance(
+      { r: data[pixelIdx], g: data[pixelIdx + 1], b: data[pixelIdx + 2] },
+      bgColor
+    );
+
+    if (dist >= outerTolerance) continue;
+
+    const spatialT = distToRemoved[i] / band;
+    const colorT = dist / outerTolerance;
+    const t = Math.max(spatialT, colorT);
+    const smooth = t * t * (3 - 2 * t);
+
+    data[pixelIdx + 3] = Math.round(data[pixelIdx + 3] * smooth);
+  }
+}
+
+export function applyChromaKeyRefinement(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  bgColor: RGBColor,
+  toleranceDistance: number,
+  removedMask: Uint8Array
+): void {
+  const channel = detectChromaKeyChannel(bgColor);
+  if (!channel) return;
+
+  const edgeBand = 2.5;
+  const distToRemoved = distanceToMask(removedMask, width, height);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const pixelIndex = y * width + x;
+      if (distToRemoved[pixelIndex] > edgeBand) continue;
+
+      const pixelIdx = (y * width + x) * 4;
+      const originalAlpha = data[pixelIdx + 3];
+      if (originalAlpha === 0) continue;
+
+      const pixel = {
+        r: data[pixelIdx],
+        g: data[pixelIdx + 1],
+        b: data[pixelIdx + 2],
+      };
+      const nextAlpha = getChromaKeyAlpha({
+        pixel,
+        bgColor,
+        toleranceDistance,
+        originalAlpha,
+      });
+
+      if (nextAlpha >= originalAlpha) continue;
+
+      suppressChromaSpill(data, pixelIdx, channel, 1 - nextAlpha / originalAlpha);
+      data[pixelIdx + 3] = nextAlpha;
+    }
+  }
+}
+
+function distanceToMask(
+  mask: Uint8Array,
+  width: number,
+  height: number
+): Float32Array {
+  const distance = new Float32Array(width * height);
+  distance.fill(Infinity);
+
+  for (let i = 0; i < distance.length; i++) {
+    if (mask[i]) distance[i] = 0;
+  }
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = y * width + x;
+      if (x > 0) distance[i] = Math.min(distance[i], distance[i - 1] + 1);
+      if (y > 0)
+        distance[i] = Math.min(distance[i], distance[i - width] + 1);
+      if (x > 0 && y > 0)
+        distance[i] = Math.min(distance[i], distance[i - width - 1] + 1.414);
+      if (x < width - 1 && y > 0)
+        distance[i] = Math.min(distance[i], distance[i - width + 1] + 1.414);
+    }
+  }
+
+  for (let y = height - 1; y >= 0; y--) {
+    for (let x = width - 1; x >= 0; x--) {
+      const i = y * width + x;
+      if (x < width - 1)
+        distance[i] = Math.min(distance[i], distance[i + 1] + 1);
+      if (y < height - 1)
+        distance[i] = Math.min(distance[i], distance[i + width] + 1);
+      if (x < width - 1 && y < height - 1)
+        distance[i] = Math.min(distance[i], distance[i + width + 1] + 1.414);
+      if (x > 0 && y < height - 1)
+        distance[i] = Math.min(distance[i], distance[i + width - 1] + 1.414);
+    }
+  }
+
+  return distance;
+}
+
+/**
+ * Separable Gaussian blur applied only to the alpha channel.
+ * Smooths staircase artifacts at transparent/opaque boundaries.
+ */
+function gaussianBlurAlpha(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+  sigma: number
+): void {
+  if (sigma <= 0) return;
+
+  const radius = Math.ceil(sigma * 2.5);
+  const kernelSize = radius * 2 + 1;
+  const kernel = new Float32Array(kernelSize);
+
+  let sum = 0;
+  for (let i = 0; i < kernelSize; i++) {
+    const x = i - radius;
+    kernel[i] = Math.exp(-(x * x) / (2 * sigma * sigma));
+    sum += kernel[i];
+  }
+  for (let i = 0; i < kernelSize; i++) {
+    kernel[i] /= sum;
+  }
+
+  const len = width * height;
+  const alpha = new Float32Array(len);
+  const temp = new Float32Array(len);
+
+  for (let i = 0; i < len; i++) {
+    alpha[i] = data[i * 4 + 3];
+  }
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let val = 0;
+      for (let k = -radius; k <= radius; k++) {
+        const sx = Math.min(Math.max(x + k, 0), width - 1);
+        val += alpha[y * width + sx] * kernel[k + radius];
+      }
+      temp[y * width + x] = val;
+    }
+  }
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let val = 0;
+      for (let k = -radius; k <= radius; k++) {
+        const sy = Math.min(Math.max(y + k, 0), height - 1);
+        val += temp[sy * width + x] * kernel[k + radius];
+      }
+      data[(y * width + x) * 4 + 3] = Math.round(
+        Math.max(0, Math.min(255, val))
+      );
+    }
+  }
+}
+
+function getChannelDominance(
+  color: RGBColor,
+  channel: ChromaKeyChannel
+): number {
+  switch (channel) {
+    case "red":
+      return color.r - Math.max(color.g, color.b);
+    case "green":
+      return color.g - Math.max(color.r, color.b);
+    case "blue":
+      return color.b - Math.max(color.r, color.g);
+  }
+}
+
+function suppressChromaSpill(
+  data: Uint8ClampedArray,
+  pixelIdx: number,
+  channel: ChromaKeyChannel,
+  strength: number
+): void {
+  const safeStrength = clamp01(strength);
+  if (safeStrength <= 0) return;
+
+  const channelIndex = channel === "red" ? 0 : channel === "green" ? 1 : 2;
+  const otherIndices = [0, 1, 2].filter((idx) => idx !== channelIndex);
+  const channelValue = data[pixelIdx + channelIndex];
+  const maxOther = Math.max(
+    data[pixelIdx + otherIndices[0]],
+    data[pixelIdx + otherIndices[1]]
+  );
+  const spill = Math.max(0, channelValue - maxOther);
+
+  if (spill === 0) return;
+
+  data[pixelIdx + channelIndex] = Math.max(
+    0,
+    Math.round(channelValue - spill * safeStrength * 0.6)
+  );
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function smoothstep(edge0: number, edge1: number, value: number): number {
+  if (edge0 === edge1) {
+    return value >= edge1 ? 1 : 0;
+  }
+
+  const t = clamp01((value - edge0) / (edge1 - edge0));
+  return t * t * (3 - 2 * t);
+}
+
+function floodFillRemove(
+  data: Uint8ClampedArray,
+  visited: Uint8Array,
+  width: number,
+  height: number,
+  startX: number,
+  startY: number,
+  bgColor: { r: number; g: number; b: number },
+  toleranceDistance: number
+): void {
+  const stack: [number, number][] = [[startX, startY]];
+  const directions = [
+    [-1, 0],
+    [1, 0],
+    [0, -1],
+    [0, 1],
+  ];
+
+  while (stack.length > 0) {
+    const [x, y] = stack.pop()!;
+
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+      continue;
+    }
+
+    const idx = y * width + x;
+    if (visited[idx]) {
+      continue;
+    }
+
+    const pixelIdx = idx * 4;
+    const pixelColor = {
+      r: data[pixelIdx],
+      g: data[pixelIdx + 1],
+      b: data[pixelIdx + 2],
+    };
+
+    if (colorDistance(pixelColor, bgColor) > toleranceDistance) {
+      continue;
+    }
+
+    visited[idx] = 1;
+    data[pixelIdx + 3] = 0; // Set alpha to 0
+
+    for (const [dx, dy] of directions) {
+      stack.push([x + dx, y + dy]);
+    }
+  }
+}
+
+/**
+ * AI-powered background removal using @imgly/background-removal
+ */
+export async function aiRemoveBackground(
+  file: File,
+  options: AIRemoveBackgroundOptions
+): Promise<RemoveResult> {
+  const { removeBackground: imglyRemoveBackground } = await import(
+    "@imgly/background-removal"
+  );
+
+  const { model, edgeShrink = 0, refineEdges = false, onProgress } = options;
+
+  onProgress?.("init", 0);
+
+  const blob = await imglyRemoveBackground(file, {
+    model,
+    progress: (key: string, current: number, total: number) => {
+      const ratio = (total > 0 ? current / total : 0) * (refineEdges ? 0.6 : 1);
+      if (key.includes("fetch:")) {
+        onProgress?.("download", ratio);
+      } else if (key === "compute:inference") {
+        onProgress?.("inference", ratio);
+      } else {
+        onProgress?.("processing", ratio);
+      }
+    },
+  });
+
+  let resultBlob = blob instanceof Blob ? blob : new Blob([blob], { type: "image/png" });
+  let warning: string | undefined;
+  if (refineEdges) {
+    try {
+      const { refineMatting } = await import("./matting");
+      resultBlob = await refineMatting(file, resultBlob, onProgress);
+    } catch (error) {
+      console.warn("Matting refinement failed; keeping the coarse cutout", error);
+      warning = "边缘精修未完成，已保留初步抠图结果。";
+    }
+  }
+
+  if (edgeShrink > 0) {
+    const img = await loadImageFromBlob(resultBlob);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d")!;
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    applyEdgeShrink(imageData.data, canvas.width, canvas.height, edgeShrink);
+    ctx.putImageData(imageData, 0, 0);
+    const shrunkBlob = await canvasToBlob(canvas);
+    onProgress?.("processing", 1);
+    return {
+      name: file.name.replace(/\.[^/.]+$/, "") + ".png",
+      blob: shrunkBlob,
+      width: canvas.width,
+      height: canvas.height,
+      warning,
+    };
+  }
+
+  const img = await loadImageFromBlob(resultBlob);
+  onProgress?.("processing", 1);
+  return {
+    name: file.name.replace(/\.[^/.]+$/, "") + ".png",
+    blob: resultBlob,
+    width: img.width,
+    height: img.height,
+    warning,
+  };
+}
+
+/**
+ * Extract channel value from pixel
+ */
+export function getChannelValue(
+  r: number,
+  g: number,
+  b: number,
+  channel: ChannelSource
+): number {
+  switch (channel) {
+    case "red":
+      return r;
+    case "green":
+      return g;
+    case "blue":
+      return b;
+    case "luminance":
+      return 0.299 * r + 0.587 * g + 0.114 * b;
+    case "saturation": {
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      return max === 0 ? 0 : ((max - min) / max) * 255;
+    }
+  }
+}
+
+/**
+ * Remove background using color channel threshold.
+ * Pixels whose channel value falls within [minThreshold, maxThreshold] are kept;
+ * pixels outside are made transparent with smooth edge transitions.
+ * Existing semi-transparent pixels are respected.
+ */
+export async function channelMatting(
+  file: File,
+  options: ChannelMattingOptions
+): Promise<RemoveResult> {
+  const {
+    channel,
+    minThreshold,
+    maxThreshold,
+    invert,
+    feather = 0,
+    edgeShrink = 0,
+  } = options;
+
+  const img = await loadImage(file);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d")!;
+
+  canvas.width = img.width;
+  canvas.height = img.height;
+  ctx.drawImage(img, 0, 0);
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const { width, height, data } = imageData;
+
+  // Soft edge width for smooth transitions at threshold boundaries
+  const softEdge = Math.max(Math.min((maxThreshold - minThreshold) * 0.08, 8), 1);
+
+  // Build a 256-entry LUT
+  const lut = new Uint8Array(256);
+  for (let v = 0; v < 256; v++) {
+    let alpha: number;
+
+    if (v < minThreshold - softEdge || v > maxThreshold + softEdge) {
+      alpha = 0;
+    } else if (v < minThreshold) {
+      const t = (v - (minThreshold - softEdge)) / softEdge;
+      alpha = t * t * (3 - 2 * t) * 255;
+    } else if (v > maxThreshold) {
+      const t = ((maxThreshold + softEdge) - v) / softEdge;
+      alpha = t * t * (3 - 2 * t) * 255;
+    } else {
+      alpha = 255;
+    }
+
+    if (invert) alpha = 255 - alpha;
+    lut[v] = Math.round(alpha);
+  }
+
+  for (let i = 0; i < data.length; i += 4) {
+    const origAlpha = data[i + 3];
+    if (origAlpha === 0) continue;
+
+    const value = getChannelValue(data[i], data[i + 1], data[i + 2], channel);
+    const channelAlpha = lut[Math.round(Math.max(0, Math.min(255, value)))];
+
+    // Combine with existing alpha
+    const newAlpha = Math.round((origAlpha / 255) * channelAlpha);
+    data[i + 3] = newAlpha;
+  }
+
+  if (edgeShrink > 0) {
+    applyEdgeShrink(data, width, height, edgeShrink);
+  }
+
+  if (feather > 0) {
+    applyFeather(data, width, height, feather);
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+
+  const blob = await canvasToBlob(canvas);
+  return {
+    name: file.name.replace(/\.[^/.]+$/, "") + ".png",
+    blob,
+    width: canvas.width,
+    height: canvas.height,
+  };
+}
+
+function loadImageFromBlob(blob: Blob): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = (e) => {
+      URL.revokeObjectURL(url);
+      reject(e);
+    };
+    img.src = url;
+  });
+}
+
+function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("Failed to create blob"));
+    }, "image/png");
+  });
+}
