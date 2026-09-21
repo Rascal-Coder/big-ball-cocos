@@ -6,10 +6,12 @@ import {
     Graphics,
     Input,
     input,
+    instantiate,
     KeyCode,
     Label,
     Layout,
     Node,
+    Prefab,
     resources,
     Sprite,
     SpriteFrame,
@@ -23,7 +25,7 @@ import {
     Widget,
 } from 'cc';
 import { AvatarAnimator } from '../avatar/AvatarAnimator';
-import { AvatarPlayMode } from '../avatar/AvatarSkinData';
+import { AVATAR_SKINS, AvatarPlayMode } from '../avatar/AvatarSkinData';
 import { AvatarSkinManager } from '../avatar/AvatarSkinManager';
 import { GameModel } from '../core/GameModel';
 import { Joystick } from '../ui/Joystick';
@@ -43,6 +45,7 @@ const ART = {
     frame: 'ui/home-frame-portrait/spriteFrame',
     start: 'ui/home-btn-start/spriteFrame',
     homeTitle: 'ui/home-sign-title/spriteFrame',
+    skinModal: 'ui/modal-skin/spriteFrame',
     decorLeft: 'ui/home-decor-left/spriteFrame',
     decorRight: 'ui/home-decor-right/spriteFrame',
     cactus: 'ui/home-prop-cactus/spriteFrame',
@@ -91,6 +94,7 @@ export class GameApp extends Component {
     private progressLabel: Label | null = null;
     private homeGoldLabel: Label | null = null;
     private homeAvatar: AvatarAnimator | null = null;
+    private skinModal: Node | null = null;
     private gameFont: Font | null = null;
     private readonly progressTrackWidth = 500;
 
@@ -476,6 +480,7 @@ export class GameApp extends Component {
             frame: [this.home, 'AvatarFrame'],
             start: [this.home, 'StartBtn'],
             homeTitle: [this.home, 'HomeTitle'],
+            skinModal: [this.node, 'SkinPanel'],
             decorLeft: [this.home, 'DecorLeft'],
             decorRight: [this.home, 'DecorRight'],
             cactus: [this.home, 'Cactus'],
@@ -661,19 +666,14 @@ export class GameApp extends Component {
 
         const shop = this._board('Shop', 196, 128);
         shop.setPosition(0, -58, 0);
-        const shopLabel = this._label('ShopLabel', '商店', 34, bone, 168);
+        const shopLabel = this._label('ShopLabel', '皮肤', 34, bone, 168);
         shopLabel.setPosition(0, -20, 0);
         shop.addChild(shopLabel);
+        shop.on(Node.EventType.TOUCH_END, () => this._openSkinModal(), this);
         side.addChild(shop);
 
-        const portrait = this._ui('AvatarRoot', 204, 202);
-        portrait.setPosition(0, 72, 0);
-        this._shade(portrait, 148, 20, -88);
-        const frame = this._ui('AvatarFrame', 204, 202);
-        frame.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        portrait.addChild(frame);
-        side.addChild(portrait);
         this.homeAvatar = null;
+        this._mountAvatar(side);
 
         const start = this._board('StartBtn', 388, 384);
         this.home.addChild(start);
@@ -692,16 +692,49 @@ export class GameApp extends Component {
         this._prop('Skull', 168, 118, { left: 2, bottom: 164 });
         this._prop('RockLg', 126, 84, { left: 20, bottom: 0 });
         this._prop('RockSm', 78, 40, { right: 64, bottom: 2 });
-
-        const portraitNode = this._find(this.home, 'AvatarRoot');
-        if (portraitNode) {
-            const animator = portraitNode.getComponent(AvatarAnimator) || portraitNode.addComponent(AvatarAnimator);
-            animator.skinId = this.model.skinId;
-            animator.playMode = AvatarPlayMode.Full;
-            animator.clickEnabled = true;
-            this.homeAvatar = animator;
-        }
         this._applySkin();
+    }
+
+    private _mountAvatar(side: Node): void {
+        const fromScene = this.node.getChildByName('AvatarRoot') ?? this.node.getChildByName('avatar-cowboy');
+        if (fromScene) {
+            this._bindAvatar(fromScene, side);
+            return;
+        }
+        resources.load('ui/avatar-cowboy', Prefab, (err: Error | null, prefab: Prefab | null) => {
+            if (err || !prefab || !side.isValid) {
+                this._fallbackAvatar(side);
+                return;
+            }
+            const node = instantiate(prefab);
+            node.name = 'AvatarRoot';
+            this._bindAvatar(node, side);
+            if (this.frames.frame) {
+                this._applySprite(this._find(node, 'AvatarFrame'), this.frames.frame);
+            }
+            this._applySkin();
+        });
+    }
+
+    private _bindAvatar(portrait: Node, side: Node): void {
+        portrait.setPosition(0, 72, 0);
+        if (portrait.parent !== side) {
+            side.addChild(portrait);
+        }
+        const animator = portrait.getComponent(AvatarAnimator) || portrait.addComponent(AvatarAnimator);
+        animator.skinId = this.model.skinId;
+        animator.playMode = AvatarPlayMode.Full;
+        animator.clickEnabled = true;
+        this.homeAvatar = animator;
+    }
+
+    private _fallbackAvatar(side: Node): void {
+        const portrait = this._ui('AvatarRoot', 204, 202);
+        this._shade(portrait, 148, 20, -88);
+        const frame = this._ui('AvatarFrame', 204, 202);
+        frame.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
+        portrait.addChild(frame);
+        this._bindAvatar(portrait, side);
     }
 
     private _buildGame(): void {
@@ -968,5 +1001,111 @@ export class GameApp extends Component {
             return;
         }
         this.homeAvatar.setSkin(this.model.skinId);
+        this._paintSkinGrid();
+    }
+
+    private _openSkinModal(): void {
+        if (!this.skinModal) {
+            this._buildSkinModal();
+        }
+        if (this.skinModal) {
+            this.skinModal.active = true;
+            this._paintSkinGrid();
+        }
+    }
+
+    private _closeSkinModal(): void {
+        if (this.skinModal) {
+            this.skinModal.active = false;
+        }
+    }
+
+    private _buildSkinModal(): void {
+        const layer = this._ui('SkinModal', DESIGN.w, DESIGN.h);
+        this.node.addChild(layer);
+        this._pin(layer, { top: 0, bottom: 0, left: 0, right: 0 });
+        this._fill(layer, new Color(48, 28, 14, 170));
+        layer.on(Node.EventType.TOUCH_END, () => this._closeSkinModal(), this);
+
+        const panel = this._ui('SkinPanel', 680, 454);
+        panel.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
+        if (this.frames.skinModal) {
+            this._applySprite(panel, this.frames.skinModal);
+        }
+        panel.setPosition(0, 20, 0);
+        panel.on(Node.EventType.TOUCH_END, (event: { propagationStopped: boolean }) => {
+            event.propagationStopped = true;
+        }, this);
+        layer.addChild(panel);
+
+        const title = this._label('SkinTitle', '选择皮肤', 40, new Color(154, 106, 32), 360);
+        title.setPosition(0, 168, 0);
+        panel.addChild(title);
+
+        const grid = this._ui('SkinGrid', 520, 280);
+        grid.setPosition(8, -12, 0);
+        panel.addChild(grid);
+
+        const cols = 4;
+        const cellW = 124;
+        const cellH = 92;
+        const originX = -((cols - 1) * cellW) / 2;
+        const originY = 88;
+        AVATAR_SKINS.forEach((skin, index) => {
+            const cell = this._ui(`Skin_${skin.id}`, 112, 86);
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            cell.setPosition(originX + col * cellW, originY - row * cellH, 0);
+            const body = this._ui('Thumb', 100, 72);
+            body.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
+            cell.addChild(body);
+            const name = this._label(`SkinName_${skin.id}`, skin.name, 18, new Color(90, 58, 28), 110);
+            name.setPosition(0, -34, 0);
+            cell.addChild(name);
+            cell.on(Node.EventType.TOUCH_END, () => this._pickSkin(skin.id), this);
+            grid.addChild(cell);
+        });
+
+        const close = this._label('SkinClose', '点空白处关闭', 22, new Color(107, 63, 31), 280);
+        close.setPosition(0, -188, 0);
+        panel.addChild(close);
+
+        this.skinModal = layer;
+        layer.setSiblingIndex(this.node.children.length - 1);
+        this._applyFonts(layer);
+        this._paintSkinGrid();
+    }
+
+    private _pickSkin(id: string): void {
+        this.model.setSkin(id);
+        this._applySkin();
+        this._closeSkinModal();
+    }
+
+    private _paintSkinGrid(): void {
+        const grid = this._find(this.skinModal, 'SkinGrid');
+        if (!grid) {
+            return;
+        }
+        AVATAR_SKINS.forEach((skin) => {
+            const cell = this._find(grid, `Skin_${skin.id}`);
+            const thumb = this._find(cell, 'Thumb');
+            const bundle = AvatarSkinManager.instance.get(skin.id);
+            if (thumb && bundle?.portrait) {
+                this._applySprite(thumb, bundle.portrait);
+                const transform = thumb.getComponent(UITransform);
+                if (transform) {
+                    transform.setContentSize(96, 72);
+                }
+            }
+            if (cell) {
+                const picked = skin.id === this.model.skinId;
+                cell.setScale(picked ? 1.06 : 1, picked ? 1.06 : 1, 1);
+                const sprite = thumb?.getComponent(Sprite);
+                if (sprite) {
+                    sprite.color = picked ? new Color(255, 236, 180) : Color.WHITE;
+                }
+            }
+        });
     }
 }

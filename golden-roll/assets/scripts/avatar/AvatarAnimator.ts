@@ -1,5 +1,6 @@
 import {
     _decorator,
+    assetManager,
     Color,
     Component,
     Enum,
@@ -63,6 +64,12 @@ export class AvatarAnimator extends Component {
     @property({ displayName: '允许点击' })
     clickEnabled = true;
 
+    @property({ type: SpriteFrame, displayName: '皮肤表' })
+    skinsSheet: SpriteFrame | null = null;
+
+    @property({ type: SpriteFrame, displayName: '表情表' })
+    facesSheet: SpriteFrame | null = null;
+
     @property({ type: SpriteFrame, displayName: '部件表（可选）' })
     partsOverride: SpriteFrame | null = null;
 
@@ -79,20 +86,21 @@ export class AvatarAnimator extends Component {
     facePose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: 0, y: -6, scale: 1 });
 
     @property({ displayName: '左眉', type: AvatarEditPose })
-    browLPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -13, y: 18, scale: 0.34 });
+    browLPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -33, y: 12.5, scale: 0.34 });
 
     @property({ displayName: '右眉', type: AvatarEditPose })
-    browRPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: 13, y: 18, scale: 0.34 });
+    browRPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -3, y: 12.5, scale: 0.34 });
 
     @property({ displayName: '左眼', type: AvatarEditPose })
-    eyeLPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -13, y: 8, scale: 0.38 });
+    eyeLPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -33, y: -5, scale: 0.38 });
 
     @property({ displayName: '右眼', type: AvatarEditPose })
-    eyeRPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: 13, y: 8, scale: 0.38 });
+    eyeRPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -3, y: -5, scale: 0.38 });
 
     @property({ displayName: '嘴', type: AvatarEditPose })
-    mouthPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: 0, y: -8, scale: 0.38 });
+    mouthPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -18, y: -22, scale: 0.38 });
 
+    private _editorTried = false;
     private _bundle: AvatarPartSet | null = null;
     private _state = AvatarState.Idle;
     private _alive = false;
@@ -113,8 +121,10 @@ export class AvatarAnimator extends Component {
 
     onLoad(): void {
         this._ensureTree();
-        if (this.partsOverride) {
-            AvatarSkinManager.instance.bindSheets(this.partsOverride);
+        this._bindAssignedSheets();
+        if (EDITOR) {
+            this._alive = true;
+            this._boot();
         }
     }
 
@@ -142,7 +152,15 @@ export class AvatarAnimator extends Component {
     }
 
     update(dt: number): void {
-        if (EDITOR || !this._ready || !this._alive) {
+        if (EDITOR) {
+            if (!this._ready && !this._editorTried) {
+                this._editorTried = true;
+                this._ensureTree();
+                this._boot();
+            }
+            return;
+        }
+        if (!this._ready || !this._alive) {
             return;
         }
         this._idleTime += dt;
@@ -191,13 +209,24 @@ export class AvatarAnimator extends Component {
             this._bundle = bundle;
             this._bindRig();
             this._ready = true;
+            if (EDITOR) {
+                this._setIdleFace();
+                this._drawShadow();
+                return;
+            }
             this._resumeIdle();
         };
-        if (this.partsOverride && !AvatarSkinManager.instance.ready) {
-            AvatarSkinManager.instance.bindSheets(this.partsOverride);
-        }
+        this._bindAssignedSheets();
         if (AvatarSkinManager.instance.ready) {
             apply();
+            return;
+        }
+        if (EDITOR) {
+            this._loadEditorSheets((ok) => {
+                if (ok) {
+                    apply();
+                }
+            });
             return;
         }
         AvatarSkinManager.instance.load((ok) => {
@@ -424,6 +453,41 @@ export class AvatarAnimator extends Component {
         }
     }
 
+    private _bindAssignedSheets(): void {
+        const skins = this.skinsSheet ?? this.partsOverride;
+        if (skins || this.facesSheet) {
+            AvatarSkinManager.instance.bindSheets(skins, this.facesSheet);
+        }
+    }
+
+    private _loadEditorSheets(done: (ok: boolean) => void): void {
+        const skinsId = 'c3d4e5f6-0718-4a01-9cde-334455667788@f9941';
+        const facesId = 'd4e5f607-1829-4b12-ade0-445566778899@f9941';
+        let left = 2;
+        const finish = (): void => {
+            left -= 1;
+            if (left > 0) {
+                return;
+            }
+            this._bindAssignedSheets();
+            done(AvatarSkinManager.instance.ready);
+        };
+        const take = (key: 'skinsSheet' | 'facesSheet', uuid: string): void => {
+            if (this[key]?.texture) {
+                finish();
+                return;
+            }
+            assetManager.loadAny({ uuid }, (err: Error | null, sf: SpriteFrame) => {
+                if (!err && sf) {
+                    this[key] = sf;
+                }
+                finish();
+            });
+        };
+        take('skinsSheet', skinsId);
+        take('facesSheet', facesId);
+    }
+
     private _onTouchEnd(event: EventTouch): void {
         event.propagationStopped = true;
         this.playClick();
@@ -439,9 +503,8 @@ export class AvatarAnimator extends Component {
         this._hideNamed(this.rig, 'CharacterSprite');
         this.portrait = this._bone(this.rig, 'Portrait', 'portrait');
         this.face = this._child(this.portrait, 'Face', 80, 80).node;
-        if (!this.keepScenePose || this._isUnset(this.face)) {
-            this.face.setPosition(this.facePose.x, this.facePose.y, 0);
-        }
+        this.face.setPosition(this.facePose.x, this.facePose.y, 0);
+        this.face.setScale(1, 1, 1);
         this.browL = this._bone(this.face, 'BrowL', 'browL');
         this.browR = this._bone(this.face, 'BrowR', 'browR');
         this.eyeL = this._bone(this.face, 'EyeL', 'eyeL');
@@ -514,6 +577,7 @@ export class AvatarAnimator extends Component {
             x: edit.x,
             y: edit.y,
             scale: edit.scale,
+            nodeScale: fallback.nodeScale,
             anchorX: fallback.anchorX,
             anchorY: fallback.anchorY,
         };
@@ -528,7 +592,7 @@ export class AvatarAnimator extends Component {
         const transform = node.getComponent(UITransform) || node.addComponent(UITransform);
         transform.setAnchorPoint(pose.anchorX, pose.anchorY);
         if (force || !this.keepScenePose || this._isUnset(node)) {
-            node.setPosition(pose.x, pose.y, 0);
+            this._applyPoseTransform(node, pose);
         }
     }
 
@@ -546,9 +610,12 @@ export class AvatarAnimator extends Component {
         if (frame) {
             transform.setContentSize(frame.rect.width * pose.scale, frame.rect.height * pose.scale);
         }
-        if (!this.keepScenePose) {
-            node.setPosition(pose.x, pose.y, 0);
-        }
+        this._applyPoseTransform(node, pose);
+    }
+
+    private _applyPoseTransform(node: Node, pose: PartPose): void {
+        node.setPosition(pose.x, pose.y, 0);
+        node.setScale(pose.nodeScale, pose.nodeScale, 1);
     }
 
     private _child(parent: Node, name: string, w: number, h: number): { node: Node; created: boolean } {

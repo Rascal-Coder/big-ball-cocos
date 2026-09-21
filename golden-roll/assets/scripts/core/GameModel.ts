@@ -1,9 +1,13 @@
+import { sys } from 'cc';
+import { resolveAvatarSkin } from '../avatar/AvatarSkinData';
 import { DEFAULT_SKIN_ID } from './Skin';
+
+const SKIN_KEY = 'nbdx-skin-id';
 
 export class GameModel {
     gold = 0;
     wallet = 9999;
-    skinId = DEFAULT_SKIN_ID;
+    skinId = resolveAvatarSkin(sys.localStorage.getItem(SKIN_KEY) || DEFAULT_SKIN_ID).id;
     distance = 0;
     weight = 12;
     lives = 3;
@@ -42,5 +46,10 @@ export class GameModel {
 
     get isDead(): boolean {
         return this.lives <= 0;
+    }
+
+    setSkin(id: string): void {
+        this.skinId = resolveAvatarSkin(id).id;
+        sys.localStorage.setItem(SKIN_KEY, this.skinId);
     }
 }

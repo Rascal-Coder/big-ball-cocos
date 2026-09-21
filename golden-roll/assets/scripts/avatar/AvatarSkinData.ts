@@ -105,18 +105,21 @@ export interface PartPose {
     x: number;
     y: number;
     scale: number;
+    nodeScale: number;
     anchorX: number;
     anchorY: number;
 }
 
+/** 五官坐标以编辑器手动对齐为准，换肤只换整身。 */
 export const AVATAR_POSE: Record<string, PartPose> = {
-    rig: { x: 0, y: 8, scale: 1, anchorX: 0.5, anchorY: 0.5 },
-    portrait: { x: 0, y: -4, scale: 0.7, anchorX: 0.5, anchorY: 0.42 },
-    browL: { x: -13, y: 18, scale: 0.34, anchorX: 0.5, anchorY: 0.5 },
-    browR: { x: 13, y: 18, scale: 0.34, anchorX: 0.5, anchorY: 0.5 },
-    eyeL: { x: -13, y: 8, scale: 0.38, anchorX: 0.5, anchorY: 0.5 },
-    eyeR: { x: 13, y: 8, scale: 0.38, anchorX: 0.5, anchorY: 0.5 },
-    mouth: { x: 0, y: -8, scale: 0.38, anchorX: 0.5, anchorY: 0.5 },
+    rig: { x: 0, y: 8, scale: 1, nodeScale: 1, anchorX: 0.5, anchorY: 0.5 },
+    portrait: { x: 0, y: -4, scale: 0.7, nodeScale: 1, anchorX: 0.5, anchorY: 0.42 },
+    face: { x: 0, y: -6, scale: 1, nodeScale: 1, anchorX: 0.5, anchorY: 0.5 },
+    browL: { x: -33, y: 12.5, scale: 0.34, nodeScale: 1, anchorX: 0.5, anchorY: 0.5 },
+    browR: { x: -3, y: 12.5, scale: 0.34, nodeScale: 1, anchorX: 0.5, anchorY: 0.5 },
+    eyeL: { x: -33, y: -5, scale: 0.38, nodeScale: 0.8, anchorX: 0.5, anchorY: 0.5 },
+    eyeR: { x: -3, y: -5, scale: 0.38, nodeScale: 0.8, anchorX: 0.5, anchorY: 0.5 },
+    mouth: { x: -18, y: -22, scale: 0.38, nodeScale: 0.4, anchorX: 0.5, anchorY: 0.5 },
 };
 
 export function randRange(min: number, max: number): number {

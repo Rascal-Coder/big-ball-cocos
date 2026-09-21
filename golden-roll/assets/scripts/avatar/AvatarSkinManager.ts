@@ -67,9 +67,12 @@ export class AvatarSkinManager {
         });
     }
 
-    bindSheets(parts?: SpriteFrame | null): void {
-        if (parts) {
-            this._sheets.skins = parts;
+    bindSheets(skins?: SpriteFrame | null, faces?: SpriteFrame | null): void {
+        if (skins) {
+            this._sheets.skins = skins;
+        }
+        if (faces) {
+            this._sheets.faces = faces;
         }
         const ids = Object.keys(AVATAR_SHEET_PATHS) as AvatarSheetId[];
         if (ids.every((id) => this._sheets[id]?.texture)) {
