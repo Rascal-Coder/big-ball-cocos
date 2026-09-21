@@ -11,7 +11,6 @@ import {
     SpriteFrame,
     Tween,
     UITransform,
-    Vec3,
     tween,
 } from 'cc';
 import { EDITOR } from 'cc/env';
@@ -29,20 +28,6 @@ import {
 import { AvatarSkinManager } from './AvatarSkinManager';
 
 const { ccclass, property, menu, executeInEditMode } = _decorator;
-
-@ccclass('AvatarEditPose')
-class AvatarEditPose {
-    @property({ displayName: 'X' })
-    x = 0;
-
-    @property({ displayName: 'Y' })
-    y = 0;
-
-    @property({ displayName: '缩放' })
-    scale = 1;
-}
-
-const ZERO = new Vec3(0, 0, 0);
 
 interface Punch {
     squashX: number;
@@ -72,33 +57,6 @@ export class AvatarAnimator extends Component {
 
     @property({ type: SpriteFrame, displayName: '部件表（可选）' })
     partsOverride: SpriteFrame | null = null;
-
-    @property({
-        displayName: '保留场景拖动',
-        tooltip: '勾选后眨眼/换表情不会改回坐标。可直接拖 Portrait、Face、眼、眉、嘴。',
-    })
-    keepScenePose = true;
-
-    @property({ displayName: '整身', type: AvatarEditPose })
-    portraitPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: 0, y: -4, scale: 0.7 });
-
-    @property({ displayName: '脸根', type: AvatarEditPose })
-    facePose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: 0, y: -6, scale: 1 });
-
-    @property({ displayName: '左眉', type: AvatarEditPose })
-    browLPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -33, y: 12.5, scale: 0.34 });
-
-    @property({ displayName: '右眉', type: AvatarEditPose })
-    browRPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -3, y: 12.5, scale: 0.34 });
-
-    @property({ displayName: '左眼', type: AvatarEditPose })
-    eyeLPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -33, y: -5, scale: 0.38 });
-
-    @property({ displayName: '右眼', type: AvatarEditPose })
-    eyeRPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -3, y: -5, scale: 0.38 });
-
-    @property({ displayName: '嘴', type: AvatarEditPose })
-    mouthPose: AvatarEditPose = Object.assign(new AvatarEditPose(), { x: -18, y: -22, scale: 0.38 });
 
     private _editorTried = false;
     private _bundle: AvatarPartSet | null = null;
@@ -390,7 +348,8 @@ export class AvatarAnimator extends Component {
             this.portrait.setScale(1 + breath * 0.02 + this._punch.squashX, 1 - breath * 0.016 + this._punch.squashY, 1);
         }
         if (this.rig) {
-            this.rig.setPosition(0, 8 + this._punch.hop, 0);
+            const rigPose = this._poseOf('rig');
+            this.rig.setPosition(rigPose.x, rigPose.y + this._punch.hop, 0);
             this.rig.angle = this._punch.tilt + sway * 1.4;
         }
         if (this.face) {
@@ -447,9 +406,8 @@ export class AvatarAnimator extends Component {
         this._ready = false;
         this._state = AvatarState.Idle;
         if (this.rig) {
-            this.rig.setPosition(ZERO);
+            this._place(this.rig, 'rig');
             this.rig.angle = 0;
-            this.rig.setScale(1, 1, 1);
         }
     }
 
@@ -489,22 +447,23 @@ export class AvatarAnimator extends Component {
     }
 
     private _onTouchEnd(event: EventTouch): void {
+        if (!this.clickEnabled) {
+            return;
+        }
         event.propagationStopped = true;
         this.playClick();
     }
 
     private _ensureTree(): void {
-        this.shadow = this._child(this.node, 'Shadow', 78, 18).node;
+        this.shadow = this._child(this.node, 'Shadow', 78, 18);
         this._drawShadow();
-        const rig = this._child(this.node, 'CharacterRoot', 160, 160);
-        this.rig = rig.node;
-        this._place(this.rig, 'rig', rig.created);
+        this.rig = this._child(this.node, 'CharacterRoot', 160, 160);
+        this._place(this.rig, 'rig');
         this._hideNamed(this.rig, 'Body');
         this._hideNamed(this.rig, 'CharacterSprite');
         this.portrait = this._bone(this.rig, 'Portrait', 'portrait');
-        this.face = this._child(this.portrait, 'Face', 80, 80).node;
-        this.face.setPosition(this.facePose.x, this.facePose.y, 0);
-        this.face.setScale(1, 1, 1);
+        this.face = this._child(this.portrait, 'Face', 80, 80);
+        this._place(this.face, 'face');
         this.browL = this._bone(this.face, 'BrowL', 'browL');
         this.browR = this._bone(this.face, 'BrowR', 'browR');
         this.eyeL = this._bone(this.face, 'EyeL', 'eyeL');
@@ -540,60 +499,23 @@ export class AvatarAnimator extends Component {
     }
 
     private _bone(parent: Node | null, name: string, layoutKey: string): Node {
-        const { node, created } = this._child(parent ?? this.node, name, 32, 32);
+        const node = this._child(parent ?? this.node, name, 32, 32);
         const sprite = node.getComponent(Sprite) || node.addComponent(Sprite);
         sprite.sizeMode = Sprite.SizeMode.CUSTOM;
         sprite.trim = false;
-        this._place(node, layoutKey, created);
+        this._place(node, layoutKey);
         return node;
     }
 
-    private _editPose(layoutKey: string): AvatarEditPose | null {
-        switch (layoutKey) {
-            case 'portrait':
-                return this.portraitPose;
-            case 'browL':
-                return this.browLPose;
-            case 'browR':
-                return this.browRPose;
-            case 'eyeL':
-                return this.eyeLPose;
-            case 'eyeR':
-                return this.eyeRPose;
-            case 'mouth':
-                return this.mouthPose;
-            default:
-                return null;
-        }
-    }
-
     private _poseOf(layoutKey: string): PartPose {
-        const edit = this._editPose(layoutKey);
-        const fallback = AVATAR_POSE[layoutKey] ?? AVATAR_POSE.portrait;
-        if (!edit) {
-            return fallback;
-        }
-        return {
-            x: edit.x,
-            y: edit.y,
-            scale: edit.scale,
-            nodeScale: fallback.nodeScale,
-            anchorX: fallback.anchorX,
-            anchorY: fallback.anchorY,
-        };
+        return AVATAR_POSE[layoutKey] ?? AVATAR_POSE.portrait;
     }
 
-    private _isUnset(node: Node): boolean {
-        return Math.abs(node.position.x) < 0.01 && Math.abs(node.position.y) < 0.01;
-    }
-
-    private _place(node: Node, layoutKey: string, force: boolean): void {
+    private _place(node: Node, layoutKey: string): void {
         const pose = this._poseOf(layoutKey);
         const transform = node.getComponent(UITransform) || node.addComponent(UITransform);
         transform.setAnchorPoint(pose.anchorX, pose.anchorY);
-        if (force || !this.keepScenePose || this._isUnset(node)) {
-            this._applyPoseTransform(node, pose);
-        }
+        this._applyPoseTransform(node, pose);
     }
 
     private _paint(node: Node | null, frame: SpriteFrame | null | undefined, layoutKey: string): void {
@@ -618,9 +540,8 @@ export class AvatarAnimator extends Component {
         node.setScale(pose.nodeScale, pose.nodeScale, 1);
     }
 
-    private _child(parent: Node, name: string, w: number, h: number): { node: Node; created: boolean } {
+    private _child(parent: Node, name: string, w: number, h: number): Node {
         let node = parent.getChildByName(name);
-        const created = !node;
         if (!node) {
             node = new Node(name);
             node.layer = parent.layer;
@@ -629,7 +550,7 @@ export class AvatarAnimator extends Component {
             transform.setContentSize(w, h);
             transform.setAnchorPoint(0.5, 0.5);
         }
-        return { node, created };
+        return node;
     }
 
     private _drawShadow(): void {

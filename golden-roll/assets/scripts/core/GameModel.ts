@@ -29,6 +29,10 @@ export class GameModel {
         this.weight = Math.min(this.maxWeight, this.weight + Math.max(0, amount));
     }
 
+    addLife(amount = 1): void {
+        this.lives = Math.min(this.maxLives, this.lives + Math.max(0, amount));
+    }
+
     addDistance(meters: number): void {
         if (meters > 0) {
             this.distance += meters;

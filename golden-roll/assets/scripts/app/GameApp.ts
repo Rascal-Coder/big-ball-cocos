@@ -1,22 +1,19 @@
 import {
     _decorator,
+    Asset,
     Color,
     Component,
+    Constructor,
+    director,
     Font,
     Graphics,
     Input,
     input,
-    instantiate,
     KeyCode,
     Label,
-    Layout,
     Node,
     Prefab,
-    resources,
-    Sprite,
     SpriteFrame,
-    Tween,
-    tween,
     UIOpacity,
     UITransform,
     Vec2,
@@ -24,48 +21,25 @@ import {
     ResolutionPolicy,
     Widget,
 } from 'cc';
-import { AvatarAnimator } from '../avatar/AvatarAnimator';
-import { AVATAR_SKINS, AvatarPlayMode } from '../avatar/AvatarSkinData';
+import { AVATAR_SHEET_PATHS } from '../avatar/AvatarSkinData';
 import { AvatarSkinManager } from '../avatar/AvatarSkinManager';
+import { BACKDROP_SPRITES, bindNamedSprites, HOME_SPRITES } from '../core/ArtBinder';
+import { AssetService } from '../core/AssetService';
+import { applyGameFace, applyTitleFace, formatCompactAmount, GAME_FONT } from '../core/Format';
 import { GameModel } from '../core/GameModel';
+import { findNode } from '../core/NodeQuery';
+import { HomeController } from '../ui/HomeController';
 import { Joystick } from '../ui/Joystick';
+import { LoadingView } from '../ui/LoadingView';
+import { OverlayService } from '../ui/OverlayService';
+import { MapStreamer } from '../map/MapStreamer';
 
 const { ccclass } = _decorator;
 
 type Phase = 'loading' | 'toHome' | 'home' | 'game' | 'result';
 
-const ART = {
-    bgLoading: 'ui/bg-loading/spriteFrame',
-    bgHome: 'ui/bg-home/spriteFrame',
-    title: 'ui/sign-title/spriteFrame',
-    beetle: 'ui/beetle-roll/spriteFrame',
-    progress: 'ui/panel-progress/spriteFrame',
-    plaque: 'ui/home-plaque/spriteFrame',
-    gold: 'ui/home-board-gold/spriteFrame',
-    frame: 'ui/home-frame-portrait/spriteFrame',
-    start: 'ui/home-btn-start/spriteFrame',
-    homeTitle: 'ui/home-sign-title/spriteFrame',
-    skinModal: 'ui/modal-skin/spriteFrame',
-    decorLeft: 'ui/home-decor-left/spriteFrame',
-    decorRight: 'ui/home-decor-right/spriteFrame',
-    cactus: 'ui/home-prop-cactus/spriteFrame',
-    skull: 'ui/home-prop-skull/spriteFrame',
-    rockLg: 'ui/home-prop-rock-lg/spriteFrame',
-    rockSm: 'ui/home-prop-rock-sm/spriteFrame',
-    tumbleweed: 'ui/home-prop-tumbleweed/spriteFrame',
-    sage: 'ui/home-prop-sage/spriteFrame',
-} as const;
-/** 全局只用马善政楷书，OFL 可商用裁切子集。 */
-const FONT = 'fonts/title-hero';
-const GAME_TITLE = '泥球大侠';
+const FONT = GAME_FONT;
 const DESIGN = { w: 750, h: 1334 };
-
-interface WorldItem {
-    node: Node;
-    kind: 'cactus' | 'coin' | 'mud';
-    radius: number;
-    taken: boolean;
-}
 
 @ccclass('GameApp')
 export class GameApp extends Component {
@@ -75,12 +49,13 @@ export class GameApp extends Component {
 
     private phase: Phase = 'loading';
     private backdrop: Node = null!;
-    private bgLoading: Node = null!;
-    private bgHome: Node = null!;
+    private bgLoading: Node | null = null;
+    private bgHome: Node | null = null;
     private loading: Node = null!;
     private home: Node = null!;
     private game: Node = null!;
     private result: Node = null!;
+    private overlay: Node = null!;
     private world: Node = null!;
     private ball: Node = null!;
     private beetle: Node = null!;
@@ -90,28 +65,33 @@ export class GameApp extends Component {
     private hudWeight: Label | null = null;
     private hudLives: Label | null = null;
     private resultBody: Label | null = null;
-    private progressBar: Node = null!;
-    private progressLabel: Label | null = null;
-    private homeGoldLabel: Label | null = null;
-    private homeAvatar: AvatarAnimator | null = null;
-    private skinModal: Node | null = null;
+    private loadingView: LoadingView | null = null;
+    private homeCtrl: HomeController | null = null;
     private gameFont: Font | null = null;
-    private readonly progressTrackWidth = 500;
 
-    private frames: Partial<Record<keyof typeof ART, SpriteFrame>> = {};
-    private loadTimer = 0;
-    private spawnY = 420;
-    private items: WorldItem[] = [];
+    private homeReady = false;
+    private map: MapStreamer | null = null;
     private ballPos = { x: 0, y: 0 };
     private facing = { x: 0, y: 1 };
 
     onLoad(): void {
         this._lockPortrait();
         view.on('canvas-resize', this._lockPortrait, this);
-        this._ensureViews();
+        try {
+            this._bindScene();
+        } catch (err) {
+            console.error('[GameApp] bind scene', err);
+        }
         this._loadFonts();
-        this._loadArt();
-        this._enterLoading();
+        if (this.backdrop) {
+            void bindNamedSprites(this.backdrop, BACKDROP_SPRITES);
+        }
+        if (this.loading) {
+            this._enterLoading();
+            void this._bootFromLoading();
+        } else if (this.home) {
+            void this._bootHome();
+        }
     }
 
     onDestroy(): void {
@@ -129,24 +109,92 @@ export class GameApp extends Component {
     }
 
     update(dt: number): void {
-        if (this.phase === 'loading') {
-            this.loadTimer += dt;
-            const t = Math.min(1, this.loadTimer / 1.6);
-            this._setProgress(t);
-            if (t >= 1) {
-                this._leaveLoadingToHome();
-            }
-            return;
-        }
         if (this.phase !== 'game') {
             return;
         }
         this._tickGame(dt);
     }
 
+    private _bindScene(): void {
+        this.backdrop = this.node.getChildByName('Backdrop') ?? this.node;
+        this.bgLoading = findNode(this.backdrop, 'LoadingBg');
+        this.bgHome = findNode(this.backdrop, 'HomeBg');
+        this.loading = this.node.getChildByName('Loading');
+        this.home = this.node.getChildByName('Home');
+        if (this.loading) {
+            this._ensureOpacity(this.loading);
+            this.loadingView = this.loading.getComponent(LoadingView) ?? this.loading.addComponent(LoadingView);
+        }
+        if (this.home) {
+            this.home.active = false;
+            this._ensureOpacity(this.home);
+            this.homeCtrl = this.home.getComponent(HomeController) ?? this.home.addComponent(HomeController);
+            this.game = this._page('Game');
+            this.result = this._page('Result');
+            this.overlay = this._page('Overlay');
+            this._setActive(this.game, false);
+            this._setActive(this.result, false);
+            OverlayService.bind(this.overlay);
+            this._buildGame();
+            this._buildResult();
+        }
+        this._ensureOpacity(this.backdrop);
+        this._ensureOpacity(this.bgLoading);
+        this._ensureOpacity(this.bgHome);
+    }
+
+    private _loadHomeScene(): void {
+        const tryLoad = (name: string, next?: () => void): void => {
+            director.loadScene(name, (err) => {
+                if (!err) {
+                    return;
+                }
+                console.warn('[GameApp] load scene', name, err);
+                next?.();
+            });
+        };
+        tryLoad('main', () => {
+            tryLoad('8f128e7c-3830-41db-9053-75d632c776af', () => {
+                console.error('[GameApp] cannot open home scene');
+                this.phase = 'loading';
+            });
+        });
+    }
+
+    private _ensureOpacity(node: Node | null): void {
+        if (node && !node.getComponent(UIOpacity)) {
+            node.addComponent(UIOpacity);
+        }
+    }
+
+    private _must(name: string): Node {
+        const node = this.node.getChildByName(name);
+        if (!node) {
+            throw new Error(`Scene missing page root: ${name}`);
+        }
+        node.active = true;
+        if (!node.getComponent(UIOpacity)) {
+            node.addComponent(UIOpacity);
+        }
+        return node;
+    }
+
+    private _page(name: string): Node {
+        let node = this.node.getChildByName(name);
+        if (!node) {
+            node = this._ui(name, DESIGN.w, DESIGN.h);
+            this.node.addChild(node);
+            this._pin(node, { top: 0, bottom: 0, left: 0, right: 0 });
+        }
+        if (!node.getComponent(UIOpacity)) {
+            node.addComponent(UIOpacity);
+        }
+        return node;
+    }
+
     private _show(phase: Phase): void {
         if (phase === 'home') {
-            if (this.phase === 'loading' || this.phase === 'toHome') {
+            if (this.phase === 'loading' || this.phase === 'toHome' || !this.homeReady) {
                 this._leaveLoadingToHome();
                 return;
             }
@@ -162,126 +210,223 @@ export class GameApp extends Component {
             return;
         }
         this.phase = 'result';
-        this.loading.active = false;
-        this.home.active = false;
-        this.game.active = true;
-        this.result.active = true;
+        this._setActive(this.loading, false);
+        this._setActive(this.home, false);
+        this._setActive(this.game, true);
+        this._setActive(this.result, true);
+    }
+
+    private async _bootFromLoading(): Promise<void> {
+        try {
+            await Promise.race([
+                this._preloadHomeAssets((t) => this.loadingView?.setProgress(t)),
+                new Promise<void>((resolve) => this.scheduleOnce(() => resolve(), 8)),
+            ]);
+        } catch (err) {
+            console.warn('[GameApp] preload', err);
+        }
+        this.loadingView?.setProgress(1);
+        this._leaveLoadingToHome();
+    }
+
+    private async _bootHome(): Promise<void> {
+        if (this.home) {
+            this.home.active = false;
+        }
+        if (this.homeCtrl && !this.homeReady) {
+            try {
+                await this.homeCtrl.setup({
+                    model: this.model,
+                    onStart: () => this._leaveHomeToGame(),
+                    applyFonts: (root) => this._applyFonts(root),
+                });
+            } catch (err) {
+                console.warn('[GameApp] home setup', err);
+            }
+            this.homeReady = true;
+        }
+        this._enterHome();
+    }
+
+    private _bootAssets(): Array<readonly [string, Constructor<Asset>]> {
+        const items: Array<readonly [string, Constructor<Asset>]> = [
+            ['ui/avatar-cowboy', Prefab],
+            [AVATAR_SHEET_PATHS.skins, SpriteFrame],
+            [AVATAR_SHEET_PATHS.faces, SpriteFrame],
+            [FONT, Font],
+        ];
+        Object.values(HOME_SPRITES).forEach((path) => items.push([path, SpriteFrame]));
+        Object.values(BACKDROP_SPRITES).forEach((path) => items.push([path, SpriteFrame]));
+        const seen = new Set<string>();
+        return items.filter(([path]) => {
+            if (seen.has(path)) {
+                return false;
+            }
+            seen.add(path);
+            return true;
+        });
+    }
+
+    private async _preloadHomeAssets(onProgress?: (t: number) => void): Promise<void> {
+        await AssetService.preload(this._bootAssets(), (t) => onProgress?.(t * 0.72));
+        await AvatarSkinManager.instance.loadAsync();
+        onProgress?.(0.8);
+        await new Promise<void>((resolve) => {
+            director.preloadScene('main', (completed, total) => {
+                if (total > 0) {
+                    onProgress?.(0.8 + 0.2 * (completed / total));
+                }
+            }, (err) => {
+                if (err) {
+                    console.warn('[GameApp] preload main', err);
+                }
+                resolve();
+            });
+        });
+        onProgress?.(1);
     }
 
     private _enterLoading(): void {
         this.phase = 'loading';
-        this.loadTimer = 0;
-        this.backdrop.active = true;
-        this.loading.active = true;
-        this.home.active = false;
-        this.game.active = false;
-        this.result.active = false;
+        this._setActive(this.backdrop, true);
+        this._setActive(this.loading, true);
+        this._setActive(this.home, false);
+        this._setActive(this.game, false);
+        this._setActive(this.result, false);
         this._setOpacity(this.backdrop, 255);
         this._setOpacity(this.bgLoading, 255);
         this._setOpacity(this.bgHome, 0);
-        this._setOpacity(this.loading, 0);
-        this._fade(this.loading, 255, 0.35, 0, 'sineOut');
+        this._setOpacity(this.loading, 255);
+        this.loadingView?.setProgress(0);
     }
 
     private _leaveLoadingToHome(): void {
         if (this.phase === 'toHome' || this.phase === 'home') {
             return;
         }
-        this.phase = 'toHome';
-        this.home.active = true;
-        this.bgHome.active = true;
-        this.backdrop.active = true;
-        this._setOpacity(this.home, 0);
-        this._fade(this.loading, 0, 0.42, 0, 'sineIn', () => {
-            this.loading.active = false;
-        });
-        this._fade(this.bgLoading, 0, 0.72, 0.08, 'sineInOut');
-        this._fade(this.bgHome, 255, 0.72, 0.08, 'sineInOut');
-        this._fade(this.home, 255, 0.5, 0.32, 'sineOut', () => {
-            this._finishArriveHome();
-        });
-        this.unschedule(this._finishArriveHome);
-        this.scheduleOnce(this._finishArriveHome, 1.1);
+        if (!this.home) {
+            this.phase = 'toHome';
+            this._loadHomeScene();
+            return;
+        }
+        void this._bootHome();
     }
 
     private _finishArriveHome(): void {
         this.unschedule(this._finishArriveHome);
-        this.loading.active = false;
-        this.home.active = true;
-        this.bgHome.active = true;
-        this.backdrop.active = true;
+        this._setActive(this.loading, false);
+        this._setActive(this.home, true);
+        this._setActive(this.bgHome, true);
+        this._setActive(this.backdrop, true);
         this._setOpacity(this.loading, 0);
         this._setOpacity(this.bgLoading, 0);
         this._setOpacity(this.bgHome, 255);
         this._setOpacity(this.home, 255);
         this.phase = 'home';
-        this._refreshHomeWallet();
-        this._applySkin();
+        this.homeCtrl?.refresh();
     }
 
     private _enterHome(): void {
         this.phase = 'home';
-        this.backdrop.active = true;
-        this.loading.active = false;
-        this.home.active = true;
-        this.game.active = false;
-        this.result.active = false;
+        this._setActive(this.backdrop, true);
+        this._setActive(this.loading, false);
+        this._setActive(this.home, true);
+        this._setActive(this.game, false);
+        this._setActive(this.result, false);
         this._setOpacity(this.backdrop, 255);
         this._setOpacity(this.bgLoading, 0);
         this._setOpacity(this.bgHome, 255);
-        this._setOpacity(this.home, 0);
-        this._refreshHomeWallet();
-        this._applySkin();
-        this._fade(this.home, 255, 0.35, 0, 'sineOut');
+        this._setOpacity(this.home, 255);
+        this.homeCtrl?.refresh();
     }
 
     private _leaveHomeToGame(): void {
         if (this.phase !== 'home') {
             return;
         }
-        this.phase = 'game';
-        this._fade(this.home, 0, 0.28, 0, 'sineIn', () => {
-            this.home.active = false;
-        });
-        this._fade(this.backdrop, 0, 0.28, 0, 'sineIn', () => {
-            this.backdrop.active = false;
-        });
+        this._setActive(this.home, false);
+        this._setActive(this.backdrop, false);
         this._enterGamePlay();
     }
 
     private _enterGame(): void {
-        this.loading.active = false;
-        this.home.active = false;
-        this.backdrop.active = false;
+        this._setActive(this.loading, false);
+        this._setActive(this.home, false);
+        this._setActive(this.backdrop, false);
         this._setOpacity(this.backdrop, 0);
         this._enterGamePlay();
     }
 
     private _enterGamePlay(): void {
         this.phase = 'game';
-        this.game.active = true;
-        this.result.active = false;
-        this._setOpacity(this.game, 0);
-        this._fade(this.game, 255, 0.32, 0.12, 'sineOut');
+        if (!this.game?.isValid) {
+            this.game = this._page('Game');
+            this._buildGame();
+        }
+        if (!this.result?.isValid) {
+            this.result = this._page('Result');
+            this._buildResult();
+        }
+        this._setActive(this.game, true);
+        this._setActive(this.result, false);
+        this._setOpacity(this.game, 255);
         this._startRun();
     }
 
     private _startRun(): void {
         this.model.reset();
-        this.items.forEach((item) => item.node.destroy());
-        this.items.length = 0;
         this.ballPos.x = 0;
         this.ballPos.y = 0;
-        this.spawnY = 420;
         this.facing.x = 0;
         this.facing.y = 1;
-        this.world.removeAllChildren();
-        this._paintGround();
-        this.ball = this._dot('MudBall', new Color(92, 58, 36), 46);
-        this.beetle = this._dot('Beetle', new Color(36, 28, 20), 22);
-        this.world.addChild(this.ball);
-        this.world.addChild(this.beetle);
+        this._ensureActors();
         this._refreshHud();
+        void this._bootMap();
+    }
+
+    private _ensureActors(): void {
+        if (!this.world?.isValid) {
+            this._buildGame();
+        }
+        if (!this.world?.isValid) {
+            return;
+        }
+        if (!this.ball?.isValid) {
+            this.ball = this._dot('MudBall', new Color(92, 58, 36), 46);
+            this.world.addChild(this.ball);
+        }
+        if (!this.beetle?.isValid) {
+            this.beetle = this._dot('Beetle', new Color(36, 28, 20), 22);
+            this.world.addChild(this.beetle);
+        }
+        this.ball.setSiblingIndex(this.world.children.length - 1);
+        this.beetle.setSiblingIndex(this.world.children.length - 1);
+        this.ball.setPosition(0, 0, 0);
+        this.beetle.setPosition(0, -58, 0);
+    }
+
+    private async _bootMap(): Promise<void> {
+        if (!this.world?.isValid) {
+            this._buildGame();
+        }
+        if (!this.world?.isValid) {
+            console.warn('[GameApp] map skipped: no World');
+            return;
+        }
+        let terrain = this.world.getChildByName('Terrain');
+        if (!terrain) {
+            terrain = this._ui('Terrain', DESIGN.w, DESIGN.h);
+            this.world.addChild(terrain);
+            terrain.setSiblingIndex(0);
+        }
+        this.map = terrain.getComponent(MapStreamer) ?? terrain.addComponent(MapStreamer);
+        try {
+            await this.map.setup();
+            this.map.reset(Date.now() & 0x7fffffff);
+            this._ensureActors();
+        } catch (err) {
+            console.warn('[GameApp] map', err);
+        }
     }
 
     private _tickGame(dt: number): void {
@@ -295,7 +440,8 @@ export class GameApp extends Component {
         }
         const weightSlow = 1 - this.model.weight * 0.004;
         const speed = 240 * Math.max(0.55, weightSlow);
-        this.ballPos.x = this._clamp(this.ballPos.x + this.move.x * speed * dt, -210, 210);
+        const half = this.map?.pathHalfWidth ?? 210;
+        this.ballPos.x = this._clamp(this.ballPos.x + this.move.x * speed * dt, -half, half);
         this.ballPos.y += Math.max(40, this.move.y * speed) * dt;
         const len = Math.hypot(this.move.x, this.move.y) || 1;
         this.facing.x = this.move.x / len;
@@ -307,52 +453,27 @@ export class GameApp extends Component {
             this.ballPos.y - this.facing.y * 58,
             0,
         );
-        this.world.setPosition(-this.ballPos.x * 0.15, -this.ballPos.y + 180, 0);
-        this._spawnAhead();
-        this._collide();
+        this.world.setPosition(-this.ballPos.x * 0.15, -this.ballPos.y - 100, 0);
+        this.map?.tick(this.ballPos.y);
+        this._collideMap();
         this._refreshHud();
         if (this.model.isDead) {
             this._openResult();
         }
     }
 
-    private _spawnAhead(): void {
-        while (this.spawnY < this.ballPos.y + 1400) {
-            const lane = (Math.random() - 0.5) * 360;
-            const roll = Math.random();
-            const kind: WorldItem['kind'] = roll < 0.45 ? 'cactus' : roll < 0.78 ? 'coin' : 'mud';
-            const color = kind === 'cactus'
-                ? new Color(46, 92, 48)
-                : kind === 'coin'
-                    ? new Color(232, 185, 35)
-                    : new Color(107, 68, 35);
-            const radius = kind === 'cactus' ? 28 : 20;
-            const node = this._dot(kind, color, radius);
-            node.setPosition(lane, this.spawnY, 0);
-            this.world.addChild(node);
-            this.items.push({ node, kind, radius, taken: false });
-            this.spawnY += 170 + Math.random() * 90;
+    private _collideMap(): void {
+        if (!this.map) {
+            return;
         }
-    }
-
-    private _collide(): void {
-        for (const item of this.items) {
-            if (item.taken) {
-                continue;
-            }
-            const p = item.node.position;
-            const dx = p.x - this.ballPos.x;
-            const dy = p.y - this.ballPos.y;
-            const hit = item.radius + 42;
-            if (dx * dx + dy * dy > hit * hit) {
-                continue;
-            }
-            item.taken = true;
-            item.node.active = false;
+        for (const item of this.map.collect(this.ballPos.x, this.ballPos.y, 42)) {
+            item.consume();
             if (item.kind === 'coin') {
-                this.model.addGold(5);
+                this.model.addGold(item.radius >= 22 ? 12 : 5);
             } else if (item.kind === 'mud') {
                 this.model.addMud(6);
+            } else if (item.kind === 'life') {
+                this.model.addLife(1);
             } else if (this.model.hitObstacle()) {
                 this._openResult();
             }
@@ -363,14 +484,14 @@ export class GameApp extends Component {
         if (this.resultBody) {
             this.resultBody.string =
                 `行进距离  ${this.model.distance.toFixed(1)} m\n` +
-                `金币      ${this.model.gold}\n` +
+                `金币      ${formatCompactAmount(this.model.gold)}\n` +
                 `泥球重量  ${this.model.weightPercent}%`;
         }
         this._show('result');
     }
 
     private _refreshHud(): void {
-        if (this.hudGold) this.hudGold.string = `${this.model.gold}`;
+        if (this.hudGold) this.hudGold.string = formatCompactAmount(this.model.gold);
         if (this.hudDistance) this.hudDistance.string = `${this.model.distance.toFixed(0)}m`;
         if (this.hudWeight) this.hudWeight.string = `${this.model.weightPercent}%`;
         if (this.hudLives) this.hudLives.string = '生命 '.concat('♥'.repeat(this.model.lives) || '—');
@@ -391,27 +512,13 @@ export class GameApp extends Component {
         if (key === KeyCode.KEY_S || key === KeyCode.ARROW_DOWN) this.keyDir.y = -value;
     }
 
-    private _loadArt(): void {
-        AvatarSkinManager.instance.load(() => this._applySkin());
-        (Object.keys(ART) as Array<keyof typeof ART>).forEach((key) => {
-            resources.load(ART[key], SpriteFrame, (err: Error | null, sf: SpriteFrame) => {
-                if (err || !sf) {
-                    return;
-                }
-                this.frames[key] = sf;
-                this._bindArt(key, sf);
-            });
-        });
-    }
-
     private _loadFonts(): void {
-        resources.load(FONT, Font, (err: Error | null, font: Font) => {
-            if (err || !font) {
-                return;
-            }
-            this.gameFont = font;
-            this._applyFonts(this.node);
-        });
+        void AssetService.load(FONT, Font)
+            .then((font) => {
+                this.gameFont = font;
+                this._applyFonts(this.node);
+            })
+            .catch((err) => console.warn('[GameApp] font', err));
     }
 
     private _applyFonts(root: Node): void {
@@ -422,25 +529,38 @@ export class GameApp extends Component {
         root.children.forEach((child) => this._applyFonts(child));
     }
 
-    private _labelKind(label: Label): 'sign' | 'number' | 'ink' {
+    private _labelKind(label: Label): 'title' | 'sign' | 'number' | 'ink' {
         const name = label.node.name;
         if (name === 'GoldText' || name === 'Percent' || name === 'Gold' || name === 'Distance' || name === 'Weight') {
             return 'number';
         }
-        if (name.startsWith('IconLabel') || name === 'ShopLabel' || name === 'Main') {
+        if (name === 'Main') {
+            return 'title';
+        }
+        if (name.startsWith('IconLabel') || name === 'ShopLabel' || name === 'SkinTitle' || name === 'SkinClose') {
             return 'sign';
         }
         return 'ink';
     }
 
     private _paintFont(label: Label): void {
-        if (!this.gameFont || !label.isValid) {
+        if (!label.isValid) {
             return;
         }
-        label.useSystemFont = false;
-        label.font = this.gameFont;
+        if (!this.gameFont) {
+            return;
+        }
+        applyGameFace(label, this.gameFont);
         const kind = this._labelKind(label);
-        if (kind === 'sign') {
+        if (kind === 'number') {
+            label.color = new Color(92, 58, 28, 255);
+            label.enableOutline = true;
+            label.outlineColor = new Color(62, 36, 14, 90);
+            label.outlineWidth = 1;
+            label.cacheMode = Label.CacheMode.BITMAP;
+        } else if (kind === 'title') {
+            applyTitleFace(label);
+        } else if (kind === 'sign') {
             label.enableOutline = true;
             label.outlineColor = new Color(40, 22, 10, 180);
             label.outlineWidth = 2;
@@ -454,290 +574,10 @@ export class GameApp extends Component {
         label.string = text;
     }
 
-    private _bindArt(key: keyof typeof ART, sf: SpriteFrame): void {
-        if (key === 'bgLoading') {
-            this._applySprite(this.bgLoading, sf);
-            return;
-        }
-        if (key === 'bgHome') {
-            this._applySprite(this.bgHome, sf);
-            return;
-        }
-        if (key === 'title') {
-            this._applySprite(this._find(this.loading, 'TitleSign'), sf);
-            return;
-        }
-        if (key === 'plaque') {
-            ['Icon0', 'Icon1', 'Icon2', 'Icon3', 'Shop'].forEach((name) => {
-                this._applySprite(this._find(this.home, name), sf);
-            });
-            return;
-        }
-        const map: Partial<Record<keyof typeof ART, [Node, string]>> = {
-            beetle: [this.loading, 'Beetle'],
-            progress: [this.loading, 'ProgressPanel'],
-            gold: [this.home, 'GoldBoard'],
-            frame: [this.home, 'AvatarFrame'],
-            start: [this.home, 'StartBtn'],
-            homeTitle: [this.home, 'HomeTitle'],
-            skinModal: [this.node, 'SkinPanel'],
-            decorLeft: [this.home, 'DecorLeft'],
-            decorRight: [this.home, 'DecorRight'],
-            cactus: [this.home, 'Cactus'],
-            skull: [this.home, 'Skull'],
-            rockLg: [this.home, 'RockLg'],
-            rockSm: [this.home, 'RockSm'],
-            tumbleweed: [this.home, 'Tumbleweed'],
-            sage: [this.home, 'Sage'],
-        };
-        const pair = map[key];
-        if (pair) {
-            this._applySprite(this._find(pair[0], pair[1]), sf);
-        }
-    }
-
-    private _applySprite(node: Node | null, sf: SpriteFrame): void {
-        if (!node) return;
-        const body = node.getComponent(Sprite) ? node : this._find(node, 'Body') ?? node;
-        const sprite = body.getComponent(Sprite);
-        if (sprite) {
-            sprite.spriteFrame = sf;
-            sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        }
-        const graphics = body.getComponent(Graphics);
-        if (graphics) {
-            graphics.clear();
-            graphics.enabled = false;
-        }
-    }
-
-    private _ensureViews(): void {
-        this.backdrop = this._view('Backdrop');
-        this.bgLoading = this._makeBg(this.backdrop, 'LoadingBg');
-        this.bgHome = this._makeBg(this.backdrop, 'HomeBg');
-        this.loading = this._view('Loading');
-        this.home = this._view('Home');
-        this.game = this._view('Game');
-        this.result = this._view('Result');
-        this.backdrop.setSiblingIndex(0);
-        this.loading.setSiblingIndex(1);
-        this.home.setSiblingIndex(2);
-        this.game.setSiblingIndex(3);
-        this.result.setSiblingIndex(4);
-        this._wipe(this.loading);
-        this._wipe(this.home);
-        this._buildLoading();
-        this._buildHome();
-        this._buildGame();
-        this._buildResult();
-    }
-
-    private _view(name: string): Node {
-        let node = this.node.getChildByName(name);
-        if (!node) {
-            node = this._ui(name, DESIGN.w, DESIGN.h);
-            this.node.addChild(node);
-        }
-        if (!node.getComponent(UIOpacity)) {
-            node.addComponent(UIOpacity);
-        }
-        this._pin(node, { top: 0, bottom: 0, left: 0, right: 0 });
-        return node;
-    }
-
-    private _makeBg(parent: Node, name: string): Node {
-        let bg = parent.getChildByName(name);
-        if (!bg) {
-            bg = this._ui(name, DESIGN.w, DESIGN.h);
-            parent.addChild(bg);
-        }
-        const sprite = bg.getComponent(Sprite) || bg.addComponent(Sprite);
-        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        sprite.color = Color.WHITE;
-        if (!sprite.spriteFrame) {
-            this._fill(bg, new Color(198, 149, 82));
-        }
-        if (!bg.getComponent(UIOpacity)) {
-            bg.addComponent(UIOpacity);
-        }
-        this._pin(bg, { top: 0, bottom: 0, left: 0, right: 0 });
-        return bg;
-    }
-
-    private _wipe(node: Node): void {
-        node.removeAllChildren();
-    }
-
-    private _buildLoading(): void {
-        const bone = new Color(255, 255, 255);
-        const ink = new Color(90, 58, 28);
-
-        const header = this._ui('Header', 680, 200);
-        this.loading.addChild(header);
-        this._pin(header, { top: 36 });
-        const title = this._ui('TitleSign', 640, 188);
-        title.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        header.addChild(title);
-        this._caption(title, GAME_TITLE, bone);
-
-        const hero = this._ui('Hero', 640, 430);
-        this.loading.addChild(hero);
-        const beetle = this._ui('Beetle', 620, 380);
-        beetle.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        hero.addChild(beetle);
-
-        const footer = this._ui('Footer', 700, 220);
-        this.loading.addChild(footer);
-        this._pin(footer, { bottom: 28 });
-        const panel = this._ui('ProgressPanel', 680, 200);
-        panel.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        footer.addChild(panel);
-        const tip = this._label('Tip', '正在滚向荒原……', 28, ink, 520);
-        tip.setPosition(0, 52, 0);
-        panel.addChild(tip);
-        const track = this._ui('Track', this.progressTrackWidth, 16);
-        track.setPosition(0, 4, 0);
-        this._fill(track, new Color(196, 146, 42, 70));
-        panel.addChild(track);
-        this.progressBar = this._ui('Bar', 12, 14);
-        this.progressBar.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-        this.progressBar.setPosition(-this.progressTrackWidth / 2, 0, 0);
-        track.addChild(this.progressBar);
-        const percent = this._label('Percent', '0%', 28, ink, 160);
-        percent.setPosition(0, -50, 0);
-        panel.addChild(percent);
-        this.progressLabel = percent.getComponent(Label);
-        this._setProgress(0);
-    }
-
-    private _buildHome(): void {
-        const ink = new Color(48, 28, 12);
-        const bone = new Color(255, 255, 255);
-
-        const decorL = this._ui('DecorLeft', 248, 454);
-        decorL.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        this.home.addChild(decorL);
-        this._pin(decorL, { left: -8, bottom: 92 });
-        const decorR = this._ui('DecorRight', 236, 288);
-        decorR.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        this.home.addChild(decorR);
-        this._pin(decorR, { right: -4, bottom: 88 });
-        this._prop('Cactus', 112, 230, { right: 18, bottom: 246 });
-        this._prop('Sage', 86, 66, { right: 112, bottom: 196 });
-        this._prop('Tumbleweed', 96, 70, { left: 28, bottom: 196 });
-
-        const topBar = this._ui('TopBar', DESIGN.w, 148);
-        this.home.addChild(topBar);
-        topBar.setPosition(0, DESIGN.h / 2 - 60, 0);
-        this._pin(topBar, { top: -14, cx: 0 });
-        const topLayout = topBar.addComponent(Layout);
-        topLayout.type = Layout.Type.HORIZONTAL;
-        topLayout.resizeMode = Layout.ResizeMode.NONE;
-        topLayout.spacingX = 4;
-        topLayout.paddingLeft = 4;
-        topLayout.paddingRight = 4;
-        topLayout.horizontalDirection = Layout.HorizontalDirection.LEFT_TO_RIGHT;
-        ['签到', '属性', '排行榜', '设置'].forEach((text, index) => {
-            const plaque = this._board(`Icon${index}`, 182, 148);
-            const size = text.length > 2 ? 28 : 34;
-            const label = this._label(`IconLabel${index}`, text, size, bone, 168);
-            label.setPosition(0, -22, 0);
-            plaque.addChild(label);
-            topBar.addChild(plaque);
-        });
-        topLayout.updateLayout();
-        this.scheduleOnce(() => topLayout.updateLayout());
-
-        const info = this._ui('InfoRow', 700, 360);
-        this.home.addChild(info);
-        this._pin(info, { top: 148 });
-
-        const goldBoard = this._board('GoldBoard', 368, 236);
-        goldBoard.setPosition(-168, 36, 0);
-        const goldText = this._label('GoldText', this._formatWallet(), 52, ink, 220);
-        goldText.setPosition(52, 8, 0);
-        goldBoard.addChild(goldText);
-        this.homeGoldLabel = goldText.getComponent(Label);
-        info.addChild(goldBoard);
-
-        const side = this._ui('PortraitCol', 220, 340);
-        side.setPosition(208, -4, 0);
-        info.addChild(side);
-
-        const shop = this._board('Shop', 196, 128);
-        shop.setPosition(0, -58, 0);
-        const shopLabel = this._label('ShopLabel', '皮肤', 34, bone, 168);
-        shopLabel.setPosition(0, -20, 0);
-        shop.addChild(shopLabel);
-        shop.on(Node.EventType.TOUCH_END, () => this._openSkinModal(), this);
-        side.addChild(shop);
-
-        this.homeAvatar = null;
-        this._mountAvatar(side);
-
-        const start = this._board('StartBtn', 388, 384);
-        this.home.addChild(start);
-        start.setPosition(0, -48, 0);
-        start.on(Node.EventType.TOUCH_END, () => this._leaveHomeToGame(), this);
-
-        const bottom = this._ui('Bottom', 700, 196);
-        this.home.addChild(bottom);
-        this._pin(bottom, { bottom: 10 });
-        const title = this._board('HomeTitle', 640, 177);
-        const main = this._label('Main', GAME_TITLE, 64, bone, 560);
-        main.setPosition(0, 6, 0);
-        title.addChild(main);
-        bottom.addChild(title);
-
-        this._prop('Skull', 168, 118, { left: 2, bottom: 164 });
-        this._prop('RockLg', 126, 84, { left: 20, bottom: 0 });
-        this._prop('RockSm', 78, 40, { right: 64, bottom: 2 });
-        this._applySkin();
-    }
-
-    private _mountAvatar(side: Node): void {
-        const fromScene = this.node.getChildByName('AvatarRoot') ?? this.node.getChildByName('avatar-cowboy');
-        if (fromScene) {
-            this._bindAvatar(fromScene, side);
-            return;
-        }
-        resources.load('ui/avatar-cowboy', Prefab, (err: Error | null, prefab: Prefab | null) => {
-            if (err || !prefab || !side.isValid) {
-                this._fallbackAvatar(side);
-                return;
-            }
-            const node = instantiate(prefab);
-            node.name = 'AvatarRoot';
-            this._bindAvatar(node, side);
-            if (this.frames.frame) {
-                this._applySprite(this._find(node, 'AvatarFrame'), this.frames.frame);
-            }
-            this._applySkin();
-        });
-    }
-
-    private _bindAvatar(portrait: Node, side: Node): void {
-        portrait.setPosition(0, 72, 0);
-        if (portrait.parent !== side) {
-            side.addChild(portrait);
-        }
-        const animator = portrait.getComponent(AvatarAnimator) || portrait.addComponent(AvatarAnimator);
-        animator.skinId = this.model.skinId;
-        animator.playMode = AvatarPlayMode.Full;
-        animator.clickEnabled = true;
-        this.homeAvatar = animator;
-    }
-
-    private _fallbackAvatar(side: Node): void {
-        const portrait = this._ui('AvatarRoot', 204, 202);
-        this._shade(portrait, 148, 20, -88);
-        const frame = this._ui('AvatarFrame', 204, 202);
-        frame.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        portrait.addChild(frame);
-        this._bindAvatar(portrait, side);
-    }
-
     private _buildGame(): void {
+        if (!this.game?.isValid) {
+            this.game = this._page('Game');
+        }
         if (!this.world) {
             this.world = this.game.getChildByName('World') || this._ui('World', DESIGN.w, DESIGN.h);
             if (!this.world.parent) {
@@ -777,6 +617,9 @@ export class GameApp extends Component {
     }
 
     private _buildResult(): void {
+        if (!this.result?.isValid) {
+            this.result = this._page('Result');
+        }
         if (this.result.getChildByName('Panel')) {
             this.resultBody = this.result.getChildByName('Panel')?.getChildByName('Body')?.getComponent(Label) ?? null;
             this._applyFonts(this.result);
@@ -801,19 +644,6 @@ export class GameApp extends Component {
         back.setPosition(0, -190, 0);
         back.on(Node.EventType.TOUCH_END, () => this._show('home'), this);
         panel.addChild(back);
-    }
-
-    private _paintGround(): void {
-        for (let i = -2; i < 28; i++) {
-            const sand = this._ui(`Sand${i}`, 900, 220);
-            sand.setPosition(0, i * 210, 0);
-            this._fill(sand, i % 2 === 0 ? new Color(210, 166, 96) : new Color(196, 149, 82));
-            this.world.addChild(sand);
-            const path = this._ui(`Path${i}`, 340, 220);
-            path.setPosition(0, i * 210, 0);
-            this._fill(path, new Color(186, 138, 74));
-            this.world.addChild(path);
-        }
     }
 
     private _hudText(parent: Node, name: string, text: string, x: number, y: number): Label {
@@ -870,41 +700,6 @@ export class GameApp extends Component {
         view.resizeWithBrowserSize(true);
     }
 
-    private _caption(board: Node, title: string, color: Color): void {
-        const mainNode = this._label('Main', title, 58, color, 560);
-        mainNode.setPosition(0, 4, 0);
-        board.addChild(mainNode);
-    }
-
-    private _find(root: Node | null, name: string): Node | null {
-        if (!root) {
-            return null;
-        }
-        if (root.name === name) {
-            return root;
-        }
-        for (const child of root.children) {
-            const hit = this._find(child, name);
-            if (hit) {
-                return hit;
-            }
-        }
-        return null;
-    }
-
-    private _setProgress(t: number): void {
-        const ratio = Math.min(1, Math.max(0, t));
-        if (this.progressLabel) {
-            this.progressLabel.string = `${Math.round(ratio * 100)}%`;
-        }
-        if (!this.progressBar) {
-            return;
-        }
-        const width = Math.max(12, this.progressTrackWidth * ratio);
-        this.progressBar.getComponent(UITransform)!.setContentSize(width, 14);
-        this._fill(this.progressBar, new Color(196, 146, 42));
-    }
-
     private _pin(node: Node | null, edges: { top?: number; bottom?: number; left?: number; right?: number; cx?: number }): void {
         if (!node) {
             return;
@@ -929,183 +724,20 @@ export class GameApp extends Component {
         return node.getComponent(UIOpacity) || node.addComponent(UIOpacity);
     }
 
-    private _setOpacity(node: Node, value: number): void {
+    private _setOpacity(node: Node | null, value: number): void {
+        if (!node) {
+            return;
+        }
         this._opacity(node).opacity = value;
     }
 
-    private _fade(
-        node: Node,
-        opacity: number,
-        duration: number,
-        delay: number,
-        easing: 'sineIn' | 'sineOut' | 'sineInOut',
-        onDone?: () => void,
-    ): void {
-        const op = this._opacity(node);
-        Tween.stopAllByTarget(op);
-        const tw = tween(op);
-        if (delay > 0) {
-            tw.delay(delay);
+    private _setActive(node: Node | null | undefined, value: boolean): void {
+        if (node?.isValid) {
+            node.active = value;
         }
-        tw.to(duration, { opacity }, { easing }).call(() => onDone?.()).start();
     }
 
     private _clamp(value: number, min: number, max: number): number {
         return Math.max(min, Math.min(max, value));
-    }
-
-    private _prop(
-        name: string,
-        w: number,
-        h: number,
-        edges: { top?: number; bottom?: number; left?: number; right?: number },
-    ): Node {
-        const node = this._ui(name, w, h);
-        node.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        this.home.addChild(node);
-        this._pin(node, edges);
-        return node;
-    }
-
-    private _board(name: string, w: number, h: number): Node {
-        const root = this._ui(name, w, h);
-        this._shade(root, w * 0.74, Math.max(16, h * 0.11), -h * 0.4);
-        const body = this._ui('Body', w, h);
-        body.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        root.addChild(body);
-        return root;
-    }
-
-    private _shade(parent: Node, w: number, h: number, y: number): void {
-        const shade = this._ui('Shade', w, h);
-        shade.setPosition(4, y, 0);
-        const g = shade.addComponent(Graphics);
-        g.fillColor = new Color(38, 20, 8, 62);
-        g.ellipse(0, 0, w / 2, h / 2);
-        g.fill();
-        parent.addChild(shade);
-    }
-
-    private _formatWallet(): string {
-        return this.model.wallet.toLocaleString('en-US');
-    }
-
-    private _refreshHomeWallet(): void {
-        if (this.homeGoldLabel) {
-            this.homeGoldLabel.string = this._formatWallet();
-        }
-    }
-
-    private _applySkin(): void {
-        if (!this.homeAvatar) {
-            return;
-        }
-        this.homeAvatar.setSkin(this.model.skinId);
-        this._paintSkinGrid();
-    }
-
-    private _openSkinModal(): void {
-        if (!this.skinModal) {
-            this._buildSkinModal();
-        }
-        if (this.skinModal) {
-            this.skinModal.active = true;
-            this._paintSkinGrid();
-        }
-    }
-
-    private _closeSkinModal(): void {
-        if (this.skinModal) {
-            this.skinModal.active = false;
-        }
-    }
-
-    private _buildSkinModal(): void {
-        const layer = this._ui('SkinModal', DESIGN.w, DESIGN.h);
-        this.node.addChild(layer);
-        this._pin(layer, { top: 0, bottom: 0, left: 0, right: 0 });
-        this._fill(layer, new Color(48, 28, 14, 170));
-        layer.on(Node.EventType.TOUCH_END, () => this._closeSkinModal(), this);
-
-        const panel = this._ui('SkinPanel', 680, 454);
-        panel.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-        if (this.frames.skinModal) {
-            this._applySprite(panel, this.frames.skinModal);
-        }
-        panel.setPosition(0, 20, 0);
-        panel.on(Node.EventType.TOUCH_END, (event: { propagationStopped: boolean }) => {
-            event.propagationStopped = true;
-        }, this);
-        layer.addChild(panel);
-
-        const title = this._label('SkinTitle', '选择皮肤', 40, new Color(154, 106, 32), 360);
-        title.setPosition(0, 168, 0);
-        panel.addChild(title);
-
-        const grid = this._ui('SkinGrid', 520, 280);
-        grid.setPosition(8, -12, 0);
-        panel.addChild(grid);
-
-        const cols = 4;
-        const cellW = 124;
-        const cellH = 92;
-        const originX = -((cols - 1) * cellW) / 2;
-        const originY = 88;
-        AVATAR_SKINS.forEach((skin, index) => {
-            const cell = this._ui(`Skin_${skin.id}`, 112, 86);
-            const col = index % cols;
-            const row = Math.floor(index / cols);
-            cell.setPosition(originX + col * cellW, originY - row * cellH, 0);
-            const body = this._ui('Thumb', 100, 72);
-            body.addComponent(Sprite).sizeMode = Sprite.SizeMode.CUSTOM;
-            cell.addChild(body);
-            const name = this._label(`SkinName_${skin.id}`, skin.name, 18, new Color(90, 58, 28), 110);
-            name.setPosition(0, -34, 0);
-            cell.addChild(name);
-            cell.on(Node.EventType.TOUCH_END, () => this._pickSkin(skin.id), this);
-            grid.addChild(cell);
-        });
-
-        const close = this._label('SkinClose', '点空白处关闭', 22, new Color(107, 63, 31), 280);
-        close.setPosition(0, -188, 0);
-        panel.addChild(close);
-
-        this.skinModal = layer;
-        layer.setSiblingIndex(this.node.children.length - 1);
-        this._applyFonts(layer);
-        this._paintSkinGrid();
-    }
-
-    private _pickSkin(id: string): void {
-        this.model.setSkin(id);
-        this._applySkin();
-        this._closeSkinModal();
-    }
-
-    private _paintSkinGrid(): void {
-        const grid = this._find(this.skinModal, 'SkinGrid');
-        if (!grid) {
-            return;
-        }
-        AVATAR_SKINS.forEach((skin) => {
-            const cell = this._find(grid, `Skin_${skin.id}`);
-            const thumb = this._find(cell, 'Thumb');
-            const bundle = AvatarSkinManager.instance.get(skin.id);
-            if (thumb && bundle?.portrait) {
-                this._applySprite(thumb, bundle.portrait);
-                const transform = thumb.getComponent(UITransform);
-                if (transform) {
-                    transform.setContentSize(96, 72);
-                }
-            }
-            if (cell) {
-                const picked = skin.id === this.model.skinId;
-                cell.setScale(picked ? 1.06 : 1, picked ? 1.06 : 1, 1);
-                const sprite = thumb?.getComponent(Sprite);
-                if (sprite) {
-                    sprite.color = picked ? new Color(255, 236, 180) : Color.WHITE;
-                }
-            }
-        });
     }
 }

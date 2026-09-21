@@ -1,0 +1,19 @@
+{
+  "name": "golden-roll",
+  "platform": "wechatgame",
+  "buildPath": "project://build",
+  "outputName": "wechatgame",
+  "debug": false,
+  "md5Cache": false,
+  "sourceMaps": false,
+  "mainBundleCompressionType": "merge_dep",
+  "startScene": "7c1a2001-3333-4c01-8cde-000000000001",
+  "packages": {
+    "wechatgame": {
+      "orientation": "portrait",
+      "appid": "wx6ac3f5090a6b99c5",
+      "separateEngine": false,
+      "highPerformanceMode": false
+    }
+  }
+}

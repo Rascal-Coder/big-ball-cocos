@@ -1,4 +1,5 @@
 import { Rect, Size, SpriteFrame, Texture2D, Vec2, resources } from 'cc';
+import { AssetService } from '../core/AssetService';
 import {
     AVATAR_FACE_SLICES,
     AVATAR_SHEET_PATHS,
@@ -24,6 +25,10 @@ export class AvatarSkinManager {
 
     get ready(): boolean {
         return this._ready;
+    }
+
+    loadAsync(): Promise<boolean> {
+        return new Promise((resolve) => this.load(resolve));
     }
 
     load(onDone?: LoadCallback): void {
@@ -56,13 +61,22 @@ export class AvatarSkinManager {
             this._flush(true);
         };
         ids.forEach((id) => {
-            resources.load(AVATAR_SHEET_PATHS[id], SpriteFrame, (err: Error | null, sheet: SpriteFrame) => {
-                if (err || !sheet?.texture) {
-                    failed = true;
-                } else {
+            const path = AVATAR_SHEET_PATHS[id];
+            const apply = (sheet: SpriteFrame | null): void => {
+                if (sheet?.texture) {
                     this._sheets[id] = sheet;
+                } else {
+                    failed = true;
                 }
                 done();
+            };
+            const hit = AssetService.get(path, SpriteFrame);
+            if (hit) {
+                apply(hit);
+                return;
+            }
+            resources.load(path, SpriteFrame, (err: Error | null, sheet: SpriteFrame) => {
+                apply(err || !sheet ? null : sheet);
             });
         });
     }

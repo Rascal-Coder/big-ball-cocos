@@ -68,7 +68,6 @@ export const AVATAR_RIG_SCALE = AVATAR_DISPLAY;
 /** 整身皮肤，不含标签、不含拆开的头和身体。 */
 export const AVATAR_SKINS: readonly AvatarSkinDef[] = [
     { id: 'cowboy', name: '经典牛仔', rect: { x: 23, y: 15, w: 212, h: 188 } },
-    { id: 'sheriff', name: '警长', rect: { x: 255, y: 15, w: 209, h: 188 } },
     { id: 'pilot', name: '飞行员', rect: { x: 472, y: 18, w: 186, h: 185 } },
     { id: 'steampunk', name: '蒸汽朋克', rect: { x: 673, y: 8, w: 196, h: 195 } },
     { id: 'mexican', name: '墨西哥', rect: { x: 887, y: 7, w: 206, h: 196 } },
@@ -104,22 +103,82 @@ export const AVATAR_FACE_SLICES: Record<AvatarPartId, AtlasRect> = {
 export interface PartPose {
     x: number;
     y: number;
+    /** 贴图像素缩放，写入 contentSize。 */
     scale: number;
+    /** 节点 Scale。 */
     nodeScale: number;
     anchorX: number;
     anchorY: number;
 }
 
-/** 五官坐标以编辑器手动对齐为准，换肤只换整身。 */
+export interface FaceCell {
+    col: number;
+    row: number;
+}
+
+/** 牛仔整身像素（y 向下）。脸是横椭圆，左右取亮肤色最长行，上下包到帽檐下。 */
+export const AVATAR_PORTRAIT_SRC = { w: 212, h: 188 };
+export const AVATAR_FACE_ELLIPSE_PX = { cx: 76, cy: 117, rx: 46, ry: 35 };
+export const AVATAR_PORTRAIT_LAYOUT = { scale: 0.7, anchorX: 0.5, anchorY: 0.42 };
+export const AVATAR_FACE_GRID = { cols: 6, rows: 8 };
+
+/**
+ * 脸格槽位。列/行从椭圆外接框左上角起算，(0,0) 是左上格。
+ * 眉、眼、嘴各隔一行，避免挤在椭圆中腰。
+ */
+export const AVATAR_FACE_CELLS: Record<'browL' | 'browR' | 'eyeL' | 'eyeR' | 'mouth', FaceCell> = {
+    browL: { col: 1, row: 1 },
+    browR: { col: 4, row: 1 },
+    eyeL: { col: 1, row: 4 },
+    eyeR: { col: 4, row: 4 },
+    mouth: { col: 2.5, row: 7 },
+};
+
+function portraitLocalFromPx(px: number, py: number): { x: number; y: number } {
+    const dw = AVATAR_PORTRAIT_SRC.w * AVATAR_PORTRAIT_LAYOUT.scale;
+    const dh = AVATAR_PORTRAIT_SRC.h * AVATAR_PORTRAIT_LAYOUT.scale;
+    return {
+        x: px * AVATAR_PORTRAIT_LAYOUT.scale - dw * AVATAR_PORTRAIT_LAYOUT.anchorX,
+        y: (AVATAR_PORTRAIT_SRC.h - py) * AVATAR_PORTRAIT_LAYOUT.scale - dh * AVATAR_PORTRAIT_LAYOUT.anchorY,
+    };
+}
+
+/** 脸格中心 → Face 节点本地坐标（原点是椭圆心，Y 向上）。 */
+export function faceCellLocal(col: number, row: number): { x: number; y: number } {
+    const rx = AVATAR_FACE_ELLIPSE_PX.rx * AVATAR_PORTRAIT_LAYOUT.scale;
+    const ry = AVATAR_FACE_ELLIPSE_PX.ry * AVATAR_PORTRAIT_LAYOUT.scale;
+    const cellW = (rx * 2) / AVATAR_FACE_GRID.cols;
+    const cellH = (ry * 2) / AVATAR_FACE_GRID.rows;
+    return {
+        x: -rx + (col + 0.5) * cellW,
+        y: ry - (row + 0.5) * cellH,
+    };
+}
+
+function cellPose(cell: FaceCell, scale: number, nodeScale: number): PartPose {
+    const local = faceCellLocal(cell.col, cell.row);
+    return { x: local.x, y: local.y, scale, nodeScale, anchorX: 0.5, anchorY: 0.5 };
+}
+
+const FACE_ORIGIN = portraitLocalFromPx(AVATAR_FACE_ELLIPSE_PX.cx, AVATAR_FACE_ELLIPSE_PX.cy);
+
+/** 头像布局唯一基准：整身/骨骼写死，五官由脸格算出。 */
 export const AVATAR_POSE: Record<string, PartPose> = {
-    rig: { x: 0, y: 8, scale: 1, nodeScale: 1, anchorX: 0.5, anchorY: 0.5 },
-    portrait: { x: 0, y: -4, scale: 0.7, nodeScale: 1, anchorX: 0.5, anchorY: 0.42 },
-    face: { x: 0, y: -6, scale: 1, nodeScale: 1, anchorX: 0.5, anchorY: 0.5 },
-    browL: { x: -33, y: 12.5, scale: 0.34, nodeScale: 1, anchorX: 0.5, anchorY: 0.5 },
-    browR: { x: -3, y: 12.5, scale: 0.34, nodeScale: 1, anchorX: 0.5, anchorY: 0.5 },
-    eyeL: { x: -33, y: -5, scale: 0.38, nodeScale: 0.8, anchorX: 0.5, anchorY: 0.5 },
-    eyeR: { x: -3, y: -5, scale: 0.38, nodeScale: 0.8, anchorX: 0.5, anchorY: 0.5 },
-    mouth: { x: -18, y: -22, scale: 0.38, nodeScale: 0.4, anchorX: 0.5, anchorY: 0.5 },
+    rig: { x: 0, y: -4, scale: 1, nodeScale: 1, anchorX: 0.5, anchorY: 0.5 },
+    portrait: {
+        x: 0,
+        y: -4,
+        scale: AVATAR_PORTRAIT_LAYOUT.scale,
+        nodeScale: 1,
+        anchorX: AVATAR_PORTRAIT_LAYOUT.anchorX,
+        anchorY: AVATAR_PORTRAIT_LAYOUT.anchorY,
+    },
+    face: { x: FACE_ORIGIN.x, y: FACE_ORIGIN.y, scale: 1, nodeScale: 1, anchorX: 0.5, anchorY: 0.5 },
+    browL: cellPose(AVATAR_FACE_CELLS.browL, 0.34, 1),
+    browR: cellPose(AVATAR_FACE_CELLS.browR, 0.34, 1),
+    eyeL: cellPose(AVATAR_FACE_CELLS.eyeL, 0.38, 0.8),
+    eyeR: cellPose(AVATAR_FACE_CELLS.eyeR, 0.38, 0.8),
+    mouth: cellPose(AVATAR_FACE_CELLS.mouth, 0.38, 0.4),
 };
 
 export function randRange(min: number, max: number): number {

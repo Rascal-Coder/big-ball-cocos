@@ -35,9 +35,16 @@ def test_expression_bones_only() -> None:
     assert "AVATAR_FACE_SLICES" in data
 
 
+def test_face_grid_is_the_pose_source() -> None:
+    data = _src(DATA)
+    assert "AVATAR_FACE_ELLIPSE_PX" in data, "没有脸椭圆测图基准"
+    assert "AVATAR_FACE_GRID" in data and "AVATAR_FACE_CELLS" in data, "没有脸格"
+    assert "faceCellLocal" in data, "五官坐标没有从格子计算"
+
+
 if __name__ == "__main__":
     failed = 0
-    for fn in (test_portrait_kit_is_wired, test_expression_bones_only):
+    for fn in (test_portrait_kit_is_wired, test_expression_bones_only, test_face_grid_is_the_pose_source):
         try:
             fn()
             print(f"PASS {fn.__name__}")

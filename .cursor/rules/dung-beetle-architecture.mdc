@@ -1,0 +1,53 @@
+---
+description: 泥球大侠美术与代码分层。禁止脚本 new Node 搭整页 UI。
+alwaysApply: true
+---
+
+# 泥球大侠 · 分层范式
+
+```
+美术结构        → Scene / Prefab
+交互行为        → Component
+重复内容        → Prefab + instantiate
+业务数据        → Model / Store
+页面状态        → Controller
+跨页面能力      → Manager / Service
+动画表现        → Tween / Animation / Spine / Particle / Shader
+资源加载        → AssetManager / AssetBundle（经 AssetService）
+```
+
+## 禁止
+
+```ts
+// ❌ 脚本里搭整页或可复用 UI
+const bar = new Node('GoldBoard');
+bar.addComponent(Sprite);
+this.home.addChild(bar);
+```
+
+```ts
+// ✅ Scene 里找节点，或 instantiate Prefab
+const bar = instantiate(goldBarPrefab);
+this.goldSlot.addChild(bar);
+this.goldBar = bar.getComponent(CurrencyBar);
+```
+
+不要用 Graphics/Sprite 脚本模拟粒子、Shader、Spine。不要在 Component 里写跨页单例业务。
+
+## 首页怎么放
+
+| 内容 | 放哪 | 原因 |
+| --- | --- | --- |
+| Home 页面 | Scene 页面根 | 页面级容器。第一期可与 Loading/Game 同 Canvas |
+| 固定背景 / 装饰 | Scene Node | 首页独有，不实例化 |
+| 开始按钮 / 标题牌 | Scene Node | 首页独有 |
+| 金币栏 / 钻石栏 | Prefab | 多页复用 |
+| 动态头像 | Prefab | 独立复杂组件 |
+| 功能按钮 | Prefab | 签到/排行/设置结构一致 |
+| 商城卡片、排行行、签到格、任务/属性条 | Prefab | 数据驱动重复创建 |
+| 签到/排行/设置/商城/个人信息弹窗 | Prefab | 动态打开关闭 |
+| Loading / Toast / Confirm | Prefab | 全局复用 |
+| 红点 | Prefab + Component | 多处使用 |
+| 粒子 / Shader / Spine | ParticleSystem / Material / Prefab | 不要脚本创建大量 Sprite |
+
+第一期不实现签到、排行、养成、内购；预制体和规则要留，不要删需求。

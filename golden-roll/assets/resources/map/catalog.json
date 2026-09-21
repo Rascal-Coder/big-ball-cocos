@@ -1,0 +1,484 @@
+{
+  "desert": [
+    {
+      "id": "sand-plain",
+      "path": "map/desert/sand-plain/spriteFrame",
+      "w": 223,
+      "h": 222
+    },
+    {
+      "id": "sand-pebbles",
+      "path": "map/desert/sand-pebbles/spriteFrame",
+      "w": 222,
+      "h": 222
+    },
+    {
+      "id": "sand-tuft",
+      "path": "map/desert/sand-tuft/spriteFrame",
+      "w": 222,
+      "h": 222
+    },
+    {
+      "id": "sand-cracks",
+      "path": "map/desert/sand-cracks/spriteFrame",
+      "w": 225,
+      "h": 222
+    },
+    {
+      "id": "sand-tracks",
+      "path": "map/desert/sand-tracks/spriteFrame",
+      "w": 222,
+      "h": 222
+    },
+    {
+      "id": "sand-rocks",
+      "path": "map/desert/sand-rocks/spriteFrame",
+      "w": 223,
+      "h": 224
+    },
+    {
+      "id": "sand-dark",
+      "path": "map/desert/sand-dark/spriteFrame",
+      "w": 222,
+      "h": 224
+    },
+    {
+      "id": "sand-cacti",
+      "path": "map/desert/sand-cacti/spriteFrame",
+      "w": 222,
+      "h": 224
+    },
+    {
+      "id": "cliff-corner",
+      "path": "map/desert/cliff-corner/spriteFrame",
+      "w": 225,
+      "h": 224
+    },
+    {
+      "id": "path-ns",
+      "path": "map/desert/path-ns/spriteFrame",
+      "w": 222,
+      "h": 224
+    },
+    {
+      "id": "path-corner",
+      "path": "map/desert/path-corner/spriteFrame",
+      "w": 223,
+      "h": 218
+    },
+    {
+      "id": "path-cross",
+      "path": "map/desert/path-cross/spriteFrame",
+      "w": 222,
+      "h": 218
+    },
+    {
+      "id": "path-t",
+      "path": "map/desert/path-t/spriteFrame",
+      "w": 222,
+      "h": 218
+    },
+    {
+      "id": "sand-weeds",
+      "path": "map/desert/sand-weeds/spriteFrame",
+      "w": 225,
+      "h": 218
+    },
+    {
+      "id": "sand-plates",
+      "path": "map/desert/sand-plates/spriteFrame",
+      "w": 222,
+      "h": 218
+    },
+    {
+      "id": "pit-tile",
+      "path": "map/desert/pit-tile/spriteFrame",
+      "w": 223,
+      "h": 217
+    },
+    {
+      "id": "sand-boulders",
+      "path": "map/desert/sand-boulders/spriteFrame",
+      "w": 222,
+      "h": 217
+    },
+    {
+      "id": "cactus-tile",
+      "path": "map/desert/cactus-tile/spriteFrame",
+      "w": 222,
+      "h": 217
+    },
+    {
+      "id": "dead-wood-tile",
+      "path": "map/desert/dead-wood-tile/spriteFrame",
+      "w": 225,
+      "h": 217
+    },
+    {
+      "id": "sand-dunes",
+      "path": "map/desert/sand-dunes/spriteFrame",
+      "w": 222,
+      "h": 217
+    },
+    {
+      "id": "cactus-saguaro",
+      "path": "map/desert/cactus-saguaro/spriteFrame",
+      "w": 226,
+      "h": 249
+    },
+    {
+      "id": "cactus-small",
+      "path": "map/desert/cactus-small/spriteFrame",
+      "w": 239,
+      "h": 244
+    },
+    {
+      "id": "cactus-barrel",
+      "path": "map/desert/cactus-barrel/spriteFrame",
+      "w": 237,
+      "h": 244
+    },
+    {
+      "id": "cactus-flower",
+      "path": "map/desert/cactus-flower/spriteFrame",
+      "w": 239,
+      "h": 244
+    },
+    {
+      "id": "bush",
+      "path": "map/desert/bush/spriteFrame",
+      "w": 227,
+      "h": 244
+    },
+    {
+      "id": "tumbleweed",
+      "path": "map/desert/tumbleweed/spriteFrame",
+      "w": 226,
+      "h": 302
+    },
+    {
+      "id": "agave",
+      "path": "map/desert/agave/spriteFrame",
+      "w": 239,
+      "h": 302
+    },
+    {
+      "id": "shrub",
+      "path": "map/desert/shrub/spriteFrame",
+      "w": 237,
+      "h": 302
+    },
+    {
+      "id": "dead-branch",
+      "path": "map/desert/dead-branch/spriteFrame",
+      "w": 239,
+      "h": 302
+    },
+    {
+      "id": "stump",
+      "path": "map/desert/stump/spriteFrame",
+      "w": 228,
+      "h": 302
+    },
+    {
+      "id": "fence-h",
+      "path": "map/desert/fence-h/spriteFrame",
+      "w": 226,
+      "h": 301
+    },
+    {
+      "id": "fence-angle",
+      "path": "map/desert/fence-angle/spriteFrame",
+      "w": 239,
+      "h": 301
+    },
+    {
+      "id": "signpost",
+      "path": "map/desert/signpost/spriteFrame",
+      "w": 237,
+      "h": 301
+    },
+    {
+      "id": "lantern",
+      "path": "map/desert/lantern/spriteFrame",
+      "w": 239,
+      "h": 301
+    },
+    {
+      "id": "skull-bull",
+      "path": "map/desert/skull-bull/spriteFrame",
+      "w": 227,
+      "h": 301
+    },
+    {
+      "id": "bones",
+      "path": "map/desert/bones/spriteFrame",
+      "w": 225,
+      "h": 246
+    },
+    {
+      "id": "wagon-wheel",
+      "path": "map/desert/wagon-wheel/spriteFrame",
+      "w": 232,
+      "h": 246
+    },
+    {
+      "id": "banner",
+      "path": "map/desert/banner/spriteFrame",
+      "w": 237,
+      "h": 247
+    },
+    {
+      "id": "rocks-plant",
+      "path": "map/desert/rocks-plant/spriteFrame",
+      "w": 239,
+      "h": 246
+    },
+    {
+      "id": "cactus-pads",
+      "path": "map/desert/cactus-pads/spriteFrame",
+      "w": 227,
+      "h": 246
+    },
+    {
+      "id": "boulder",
+      "path": "map/desert/boulder/spriteFrame",
+      "w": 198,
+      "h": 154
+    },
+    {
+      "id": "stone-ball",
+      "path": "map/desert/stone-ball/spriteFrame",
+      "w": 199,
+      "h": 178
+    },
+    {
+      "id": "rock-pile",
+      "path": "map/desert/rock-pile/spriteFrame",
+      "w": 225,
+      "h": 207
+    },
+    {
+      "id": "spike-fence",
+      "path": "map/desert/spike-fence/spriteFrame",
+      "w": 233,
+      "h": 146
+    },
+    {
+      "id": "spike-ring",
+      "path": "map/desert/spike-ring/spriteFrame",
+      "w": 221,
+      "h": 150
+    },
+    {
+      "id": "cairn",
+      "path": "map/desert/cairn/spriteFrame",
+      "w": 213,
+      "h": 299
+    },
+    {
+      "id": "cactus-pair",
+      "path": "map/desert/cactus-pair/spriteFrame",
+      "w": 233,
+      "h": 302
+    },
+    {
+      "id": "thorn-bush",
+      "path": "map/desert/thorn-bush/spriteFrame",
+      "w": 221,
+      "h": 300
+    },
+    {
+      "id": "tnt",
+      "path": "map/desert/tnt/spriteFrame",
+      "w": 188,
+      "h": 295
+    },
+    {
+      "id": "crate",
+      "path": "map/desert/crate/spriteFrame",
+      "w": 225,
+      "h": 302
+    },
+    {
+      "id": "barrels",
+      "path": "map/desert/barrels/spriteFrame",
+      "w": 212,
+      "h": 229
+    },
+    {
+      "id": "minecart",
+      "path": "map/desert/minecart/spriteFrame",
+      "w": 224,
+      "h": 265
+    },
+    {
+      "id": "rail",
+      "path": "map/desert/rail/spriteFrame",
+      "w": 219,
+      "h": 233
+    },
+    {
+      "id": "cart",
+      "path": "map/desert/cart/spriteFrame",
+      "w": 238,
+      "h": 195
+    },
+    {
+      "id": "fence-wood",
+      "path": "map/desert/fence-wood/spriteFrame",
+      "w": 231,
+      "h": 156
+    },
+    {
+      "id": "snake",
+      "path": "map/desert/snake/spriteFrame",
+      "w": 205,
+      "h": 206
+    },
+    {
+      "id": "skull-post",
+      "path": "map/desert/skull-post/spriteFrame",
+      "w": 210,
+      "h": 204
+    },
+    {
+      "id": "sinkhole",
+      "path": "map/desert/sinkhole/spriteFrame",
+      "w": 239,
+      "h": 203
+    },
+    {
+      "id": "mud-ball",
+      "path": "map/desert/mud-ball/spriteFrame",
+      "w": 203,
+      "h": 191
+    },
+    {
+      "id": "barrier-x",
+      "path": "map/desert/barrier-x/spriteFrame",
+      "w": 228,
+      "h": 200
+    },
+    {
+      "id": "coin",
+      "path": "map/desert/coin/spriteFrame",
+      "w": 198,
+      "h": 174
+    },
+    {
+      "id": "gold-nuggets",
+      "path": "map/desert/gold-nuggets/spriteFrame",
+      "w": 199,
+      "h": 165
+    },
+    {
+      "id": "gold-sack",
+      "path": "map/desert/gold-sack/spriteFrame",
+      "w": 191,
+      "h": 207
+    },
+    {
+      "id": "heart",
+      "path": "map/desert/heart/spriteFrame",
+      "w": 198,
+      "h": 148
+    },
+    {
+      "id": "magnet",
+      "path": "map/desert/magnet/spriteFrame",
+      "w": 191,
+      "h": 159
+    },
+    {
+      "id": "star-badge",
+      "path": "map/desert/star-badge/spriteFrame",
+      "w": 218,
+      "h": 279
+    },
+    {
+      "id": "shield",
+      "path": "map/desert/shield/spriteFrame",
+      "w": 184,
+      "h": 295
+    },
+    {
+      "id": "snowflake",
+      "path": "map/desert/snowflake/spriteFrame",
+      "w": 197,
+      "h": 297
+    },
+    {
+      "id": "hourglass",
+      "path": "map/desert/hourglass/spriteFrame",
+      "w": 160,
+      "h": 297
+    },
+    {
+      "id": "potion",
+      "path": "map/desert/potion/spriteFrame",
+      "w": 158,
+      "h": 288
+    },
+    {
+      "id": "boot",
+      "path": "map/desert/boot/spriteFrame",
+      "w": 215,
+      "h": 231
+    },
+    {
+      "id": "bomb",
+      "path": "map/desert/bomb/spriteFrame",
+      "w": 230,
+      "h": 288
+    },
+    {
+      "id": "chest",
+      "path": "map/desert/chest/spriteFrame",
+      "w": 239,
+      "h": 263
+    },
+    {
+      "id": "key",
+      "path": "map/desert/key/spriteFrame",
+      "w": 188,
+      "h": 263
+    },
+    {
+      "id": "horseshoe",
+      "path": "map/desert/horseshoe/spriteFrame",
+      "w": 196,
+      "h": 217
+    },
+    {
+      "id": "lasso",
+      "path": "map/desert/lasso/spriteFrame",
+      "w": 219,
+      "h": 227
+    },
+    {
+      "id": "dust",
+      "path": "map/desert/dust/spriteFrame",
+      "w": 224,
+      "h": 243
+    },
+    {
+      "id": "dust-trail",
+      "path": "map/desert/dust-trail/spriteFrame",
+      "w": 228,
+      "h": 242
+    },
+    {
+      "id": "footprints",
+      "path": "map/desert/footprints/spriteFrame",
+      "w": 223,
+      "h": 232
+    },
+    {
+      "id": "hole",
+      "path": "map/desert/hole/spriteFrame",
+      "w": 230,
+      "h": 240
+    }
+  ]
+}
