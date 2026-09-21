@@ -78,6 +78,9 @@ export class AvatarAnimator extends Component {
     private avatarFrame: Node | null = null;
 
     onLoad(): void {
+        if (!this.node.isValid) {
+            return;
+        }
         this._ensureTree();
         this._bindAssignedSheets();
         if (EDITOR) {
@@ -98,15 +101,29 @@ export class AvatarAnimator extends Component {
 
     onDisable(): void {
         this._alive = false;
-        this.node.off(Node.EventType.TOUCH_END, this._onTouchEnd, this);
-        this._teardown();
+        if (this.node.isValid) {
+            this.node.off(Node.EventType.TOUCH_END, this._onTouchEnd, this);
+        }
+        this._stopMotion();
     }
 
     onDestroy(): void {
         this._alive = false;
-        this.node.off(Node.EventType.TOUCH_END, this._onTouchEnd, this);
-        this._teardown();
+        if (this.node.isValid) {
+            this.node.off(Node.EventType.TOUCH_END, this._onTouchEnd, this);
+        }
+        this._stopMotion();
         this._bundle = null;
+        this.rig = null;
+        this.portrait = null;
+        this.face = null;
+        this.eyeL = null;
+        this.eyeR = null;
+        this.browL = null;
+        this.browR = null;
+        this.mouth = null;
+        this.shadow = null;
+        this.avatarFrame = null;
     }
 
     update(dt: number): void {
@@ -163,7 +180,7 @@ export class AvatarAnimator extends Component {
             if (!bundle?.portrait) {
                 return;
             }
-            this._teardown();
+            this._stopMotion();
             this._bundle = bundle;
             this._bindRig();
             this._ready = true;
@@ -344,15 +361,15 @@ export class AvatarAnimator extends Component {
         const t = this._idleTime;
         const breath = Math.sin(t * 2.15);
         const sway = Math.sin(t * 1.35);
-        if (this.portrait) {
+        if (this._isLive(this.portrait)) {
             this.portrait.setScale(1 + breath * 0.02 + this._punch.squashX, 1 - breath * 0.016 + this._punch.squashY, 1);
         }
-        if (this.rig) {
+        if (this._isLive(this.rig)) {
             const rigPose = this._poseOf('rig');
             this.rig.setPosition(rigPose.x, rigPose.y + this._punch.hop, 0);
             this.rig.angle = this._punch.tilt + sway * 1.4;
         }
-        if (this.face) {
+        if (this._isLive(this.face)) {
             this.face.angle = Math.sin(t * 1.8) * 2;
         }
     }
@@ -375,10 +392,10 @@ export class AvatarAnimator extends Component {
         const parts = this._bundle?.parts;
         this._paint(this.eyeL, left && parts ? parts[left] : null, 'eyeL');
         this._paint(this.eyeR, right && parts ? parts[right] : null, 'eyeR');
-        if (this.eyeL) {
+        if (this._isLive(this.eyeL)) {
             this.eyeL.active = !!left;
         }
-        if (this.eyeR) {
+        if (this._isLive(this.eyeR)) {
             this.eyeR.active = !!right;
         }
     }
@@ -386,26 +403,26 @@ export class AvatarAnimator extends Component {
     private _setMouth(id: AvatarPartId | null): void {
         const frame = id ? this._bundle?.parts[id] : null;
         this._paint(this.mouth, frame, 'mouth');
-        if (this.mouth) {
+        if (this._isLive(this.mouth)) {
             this.mouth.active = !!frame;
         }
     }
 
     private _setBrows(show: boolean): void {
-        if (this.browL) {
+        if (this._isLive(this.browL)) {
             this.browL.active = show;
         }
-        if (this.browR) {
+        if (this._isLive(this.browR)) {
             this.browR.active = show;
         }
     }
 
-    private _teardown(): void {
+    private _stopMotion(): void {
         this.unscheduleAllCallbacks();
         this._resetPunch();
         this._ready = false;
         this._state = AvatarState.Idle;
-        if (this.rig) {
+        if (this._alive && this._isLive(this.rig)) {
             this._place(this.rig, 'rig');
             this.rig.angle = 0;
         }
@@ -455,6 +472,9 @@ export class AvatarAnimator extends Component {
     }
 
     private _ensureTree(): void {
+        if (!this.node.isValid) {
+            return;
+        }
         this.shadow = this._child(this.node, 'Shadow', 78, 18);
         this._drawShadow();
         this.rig = this._child(this.node, 'CharacterRoot', 160, 160);
@@ -481,7 +501,7 @@ export class AvatarAnimator extends Component {
         const order = [shade, this.shadow, this.rig, this.avatarFrame];
         for (let i = 0; i < order.length; i++) {
             const node = order[i];
-            if (node) {
+            if (this._isLive(node)) {
                 node.setSiblingIndex(i);
             }
         }
@@ -492,14 +512,17 @@ export class AvatarAnimator extends Component {
     }
 
     private _hideNamed(parent: Node | null, name: string): void {
-        const node = parent?.getChildByName(name);
-        if (node) {
+        if (!this._isLive(parent)) {
+            return;
+        }
+        const node = parent.getChildByName(name);
+        if (this._isLive(node)) {
             node.active = false;
         }
     }
 
     private _bone(parent: Node | null, name: string, layoutKey: string): Node {
-        const node = this._child(parent ?? this.node, name, 32, 32);
+        const node = this._child(this._isLive(parent) ? parent : this.node, name, 32, 32);
         const sprite = node.getComponent(Sprite) || node.addComponent(Sprite);
         sprite.sizeMode = Sprite.SizeMode.CUSTOM;
         sprite.trim = false;
@@ -511,7 +534,14 @@ export class AvatarAnimator extends Component {
         return AVATAR_POSE[layoutKey] ?? AVATAR_POSE.portrait;
     }
 
-    private _place(node: Node, layoutKey: string): void {
+    private _isLive(node: Node | null | undefined): node is Node {
+        return !!node?.isValid;
+    }
+
+    private _place(node: Node | null, layoutKey: string): void {
+        if (!this._isLive(node)) {
+            return;
+        }
         const pose = this._poseOf(layoutKey);
         const transform = node.getComponent(UITransform) || node.addComponent(UITransform);
         transform.setAnchorPoint(pose.anchorX, pose.anchorY);
@@ -519,7 +549,7 @@ export class AvatarAnimator extends Component {
     }
 
     private _paint(node: Node | null, frame: SpriteFrame | null | undefined, layoutKey: string): void {
-        if (!node) {
+        if (!this._isLive(node)) {
             return;
         }
         const pose = this._poseOf(layoutKey);
@@ -536,11 +566,17 @@ export class AvatarAnimator extends Component {
     }
 
     private _applyPoseTransform(node: Node, pose: PartPose): void {
+        if (!this._isLive(node)) {
+            return;
+        }
         node.setPosition(pose.x, pose.y, 0);
         node.setScale(pose.nodeScale, pose.nodeScale, 1);
     }
 
     private _child(parent: Node, name: string, w: number, h: number): Node {
+        if (!parent.isValid) {
+            return parent;
+        }
         let node = parent.getChildByName(name);
         if (!node) {
             node = new Node(name);
@@ -554,7 +590,7 @@ export class AvatarAnimator extends Component {
     }
 
     private _drawShadow(): void {
-        if (!this.shadow) {
+        if (!this._isLive(this.shadow)) {
             return;
         }
         this.shadow.setPosition(4, -64, 0);

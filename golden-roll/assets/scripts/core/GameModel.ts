@@ -6,7 +6,7 @@ const SKIN_KEY = 'nbdx-skin-id';
 
 export class GameModel {
     gold = 0;
-    wallet = 9999;
+    wallet = Number(sys.localStorage.getItem('golden-roll-wallet') ?? '9999') || 0;
     skinId = resolveAvatarSkin(sys.localStorage.getItem(SKIN_KEY) || DEFAULT_SKIN_ID).id;
     distance = 0;
     weight = 12;

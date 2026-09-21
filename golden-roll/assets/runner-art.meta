@@ -1,0 +1,15 @@
+{
+  "ver": "1.2.0",
+  "importer": "directory",
+  "imported": true,
+  "uuid": "4dedcbb3-93a3-5405-ab74-c32950d46f57",
+  "files": [],
+  "subMetas": {},
+  "userData": {
+    "isBundle": true,
+    "bundleName": "runner-art",
+    "priority": 1,
+    "compressionType": {},
+    "isRemoteBundle": false
+  }
+}

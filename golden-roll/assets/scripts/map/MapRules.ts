@@ -5,11 +5,15 @@ import {
     HAZARDS,
     LANDMARKS,
     MUD,
-    PATH_TILES,
+    PATH_FLOOR,
+    PATH_WEIGHT,
     ROCKS,
+    SAND_TILES,
+    SAND_WEIGHT,
     SIDE_DECO,
     SPRITE,
     SpriteId,
+    TILE_SPIN,
 } from './MapCatalog';
 import { ChunkRecipe, ChunkType, COLS, ItemKind, PropSpec, ROWS, TileSpec } from './MapTypes';
 
@@ -123,16 +127,29 @@ export class MapRules {
     private _build(type: ChunkType, left: number, right: number): ChunkRecipe {
         const tiles: TileSpec[] = [];
         const props: PropSpec[] = [];
+        let prevRow: SpriteId[] = [];
         for (let row = 0; row < ROWS; row += 1) {
+            const cur: SpriteId[] = [];
             for (let col = 0; col < COLS; col += 1) {
                 const onPath = col >= left && col <= right;
+                const avoid: SpriteId[] = [];
+                if (col > 0) {
+                    avoid.push(cur[col - 1]);
+                }
+                if (prevRow[col]) {
+                    avoid.push(prevRow[col]);
+                }
+                const id = this._pickTile(onPath, avoid);
+                cur.push(id);
                 tiles.push({
                     col,
                     row,
-                    sprite: onPath ? SPRITE[this.rng.pick(PATH_TILES)] : SPRITE[this.rng.pick(SAND_TILES)],
+                    sprite: SPRITE[id],
                     layer: onPath ? 'Path' : 'Ground',
+                    rot: TILE_SPIN.includes(id) ? this.rng.int(0, 3) * 90 : 0,
                 });
             }
+            prevRow = cur;
         }
         this._placeProps(type, left, right, props);
         return {
@@ -225,6 +242,33 @@ export class MapRules {
             }
             props.push(this._prop(this.rng.pick(cols), row, this.rng.pick(sprites), kind, radius, layer));
         }
+    }
+
+    private _pickTile(onPath: boolean, avoid: readonly SpriteId[]): SpriteId {
+        const pool = onPath ? PATH_FLOOR : SAND_TILES;
+        const weights = onPath ? PATH_WEIGHT : SAND_WEIGHT;
+        for (let i = 0; i < 8; i += 1) {
+            const id = this._weighted(pool, weights);
+            if (!avoid.includes(id)) {
+                return id;
+            }
+        }
+        return this.rng.pick(pool);
+    }
+
+    private _weighted(pool: readonly SpriteId[], weights: Partial<Record<SpriteId, number>>): SpriteId {
+        let total = 0;
+        for (const id of pool) {
+            total += weights[id] ?? 1;
+        }
+        let roll = this.rng.next() * total;
+        for (const id of pool) {
+            roll -= weights[id] ?? 1;
+            if (roll <= 0) {
+                return id;
+            }
+        }
+        return pool[pool.length - 1];
     }
 
     private _prop(

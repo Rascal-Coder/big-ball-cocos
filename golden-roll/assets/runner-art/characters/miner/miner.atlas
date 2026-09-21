@@ -1,0 +1,12 @@
+miner.png
+size: 1145,1374
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+body
+  rotate: false
+  xy: 0, 0
+  size: 1145, 1374
+  orig: 1145, 1374
+  offset: 0, 0
+  index: -1

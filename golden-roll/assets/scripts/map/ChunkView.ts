@@ -30,6 +30,7 @@ export class ChunkView extends Component {
             const node = pool.acquire(PREFAB.tile, this._layer(tile.layer));
             this._paint(node, frames.get(tile.sprite), TILE_DRAW, TILE_DRAW_H);
             node.setPosition(cellX(tile.col), cellY(tile.row), 0);
+            node.angle = tile.rot ?? 0;
             this._tiles.push(node);
         }
         for (const prop of recipe.props) {
@@ -43,6 +44,7 @@ export class ChunkView extends Component {
             const h = frame ? Math.max(36, frame.height * k) : 80;
             this._paint(node, frame, w, h);
             node.setPosition(cellX(prop.col), cellY(prop.row), 0);
+            node.angle = 0;
             const item = node.getComponent(MapItem) ?? node.addComponent(MapItem);
             item.bind(prop.kind, prop.radius);
             this.items.push(item);
@@ -73,6 +75,7 @@ export class ChunkView extends Component {
         if (sprite && frame) {
             sprite.spriteFrame = frame;
             sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+            sprite.type = Sprite.Type.SIMPLE;
         }
         const box = node.getComponent(UITransform);
         box?.setContentSize(w, h);

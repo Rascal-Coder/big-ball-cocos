@@ -97,7 +97,42 @@ export const SAND_TILES: SpriteId[] = [
     'sandDunes',
 ];
 
-export const PATH_TILES: SpriteId[] = ['pathNs', 'pathCross', 'pathT', 'sandTracks'];
+/** 路面用沙地变体，不用十字/丁字路口砖乱铺。 */
+export const PATH_FLOOR: SpriteId[] = ['sandTracks', 'sandPlain', 'sandPebbles', 'sandTuft', 'sandWeeds'];
+
+export const TILE_SPIN: readonly SpriteId[] = [
+    'sandPlain',
+    'sandPebbles',
+    'sandTuft',
+    'sandCracks',
+    'sandRocks',
+    'sandWeeds',
+    'sandPlates',
+    'sandDark',
+    'sandDunes',
+];
+
+export const SAND_WEIGHT: Partial<Record<SpriteId, number>> = {
+    sandPlain: 26,
+    sandPebbles: 18,
+    sandTuft: 14,
+    sandWeeds: 12,
+    sandCracks: 8,
+    sandRocks: 7,
+    sandDunes: 6,
+    sandPlates: 5,
+    sandDark: 4,
+    sandCacti: 2,
+    sandBoulders: 2,
+};
+
+export const PATH_WEIGHT: Partial<Record<SpriteId, number>> = {
+    sandTracks: 36,
+    sandPlain: 22,
+    sandPebbles: 16,
+    sandTuft: 14,
+    sandWeeds: 12,
+};
 
 export const CACTUS: SpriteId[] = [
     'cactusSaguaro',

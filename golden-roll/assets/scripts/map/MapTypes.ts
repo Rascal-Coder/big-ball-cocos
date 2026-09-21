@@ -9,6 +9,7 @@ export interface TileSpec {
     row: number;
     sprite: string;
     layer: MapLayer;
+    rot?: number;
 }
 
 export interface PropSpec {
@@ -30,10 +31,10 @@ export interface ChunkRecipe {
     props: PropSpec[];
 }
 
-/** 新图地砖约 222×222，圆角用绘制边盖住。 */
+/** 新图地砖约 222×222，圆角用重叠绘制盖住。 */
 export const TILE = 208;
-export const TILE_DRAW = 224;
-export const TILE_DRAW_H = 224;
+export const TILE_DRAW = 248;
+export const TILE_DRAW_H = 248;
 export const COLS = 7;
 export const ROWS = 6;
 export const CHUNK_H = TILE * ROWS;

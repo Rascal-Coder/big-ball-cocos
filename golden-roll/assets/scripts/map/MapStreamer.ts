@@ -1,4 +1,4 @@
-import { _decorator, Component, Node, Sprite, SpriteFrame, Texture2D, UITransform } from 'cc';
+import { _decorator, Component, Node, Sprite, SpriteFrame, UITransform } from 'cc';
 import { AssetService } from '../core/AssetService';
 import { NodePool } from '../core/NodePool';
 import { PREFAB, SPRITE } from './MapCatalog';
@@ -126,10 +126,9 @@ export class MapStreamer extends Component {
         const frame = this.frames.get(SPRITE.sandPlain);
         const sprite = node.getComponent(Sprite);
         if (sprite && frame) {
-            frame.texture?.setWrapMode(Texture2D.WrapMode.REPEAT, Texture2D.WrapMode.REPEAT);
             sprite.spriteFrame = frame;
             sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-            sprite.type = Sprite.Type.TILED;
+            sprite.type = Sprite.Type.SIMPLE;
         }
         node.getComponent(UITransform)?.setContentSize(2400, 6400);
         this.bed = node;

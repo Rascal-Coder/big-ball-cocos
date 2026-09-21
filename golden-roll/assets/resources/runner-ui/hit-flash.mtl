@@ -1,0 +1,25 @@
+{
+  "__type__": "cc.Material",
+  "_name": "hit-flash",
+  "_objFlags": 0,
+  "__editorExtras__": {},
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "537cf02a-0a77-5683-8a2d-e64c7840d873",
+    "__expectedType__": "cc.EffectAsset"
+  },
+  "_techIdx": 0,
+  "_defines": [
+    {
+      "USE_TEXTURE": true
+    }
+  ],
+  "_states": [
+    {}
+  ],
+  "_props": [
+    {
+      "flash": 0
+    }
+  ]
+}
