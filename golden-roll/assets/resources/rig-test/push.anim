@@ -1,0 +1,2230 @@
+[
+  {
+    "__type__": "cc.AnimationClip",
+    "_name": "push",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "_native": "",
+    "sample": 30,
+    "speed": 1,
+    "wrapMode": 2,
+    "enableTrsBlending": false,
+    "_duration": 0.8,
+    "_hash": 0,
+    "_tracks": [
+      {
+        "__id__": 1
+      },
+      {
+        "__id__": 6
+      },
+      {
+        "__id__": 11
+      },
+      {
+        "__id__": 16
+      },
+      {
+        "__id__": 21
+      },
+      {
+        "__id__": 26
+      },
+      {
+        "__id__": 31
+      },
+      {
+        "__id__": 33
+      },
+      {
+        "__id__": 35
+      }
+    ],
+    "_exoticAnimation": null,
+    "_events": [],
+    "_embeddedPlayers": [],
+    "_additiveSettings": {
+      "__type__": "cc.AnimationClipAdditiveSettings",
+      "enabled": false,
+      "refClip": null
+    },
+    "_auxiliaryCurveEntries": []
+  },
+  {
+    "__type__": "cc.animation.VectorTrack",
+    "_binding": {
+      "__type__": "cc.animation.TrackBinding",
+      "path": {
+        "__type__": "cc.animation.TrackPath",
+        "_paths": [
+          {
+            "__type__": "cc.animation.HierarchyPath",
+            "path": "Beetle"
+          },
+          "position"
+        ]
+      },
+      "proxy": null
+    },
+    "_channels": [
+      {
+        "__id__": 2
+      },
+      {
+        "__id__": 3
+      },
+      {
+        "__id__": 4
+      },
+      {
+        "__id__": 5
+      }
+    ],
+    "_nComponents": 3
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 1,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -1,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -36,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -32,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -36,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -32,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -36,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.VectorTrack",
+    "_binding": {
+      "__type__": "cc.animation.TrackBinding",
+      "path": {
+        "__type__": "cc.animation.TrackPath",
+        "_paths": [
+          {
+            "__type__": "cc.animation.HierarchyPath",
+            "path": "Beetle"
+          },
+          "eulerAngles"
+        ]
+      },
+      "proxy": null
+    },
+    "_channels": [
+      {
+        "__id__": 7
+      },
+      {
+        "__id__": 8
+      },
+      {
+        "__id__": 9
+      },
+      {
+        "__id__": 10
+      }
+    ],
+    "_nComponents": 3
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -6,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -8,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -6,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -8,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -6,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.VectorTrack",
+    "_binding": {
+      "__type__": "cc.animation.TrackBinding",
+      "path": {
+        "__type__": "cc.animation.TrackPath",
+        "_paths": [
+          {
+            "__type__": "cc.animation.HierarchyPath",
+            "path": "Beetle/Hat"
+          },
+          "eulerAngles"
+        ]
+      },
+      "proxy": null
+    },
+    "_channels": [
+      {
+        "__id__": 12
+      },
+      {
+        "__id__": 13
+      },
+      {
+        "__id__": 14
+      },
+      {
+        "__id__": 15
+      }
+    ],
+    "_nComponents": 3
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 6,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -6,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.VectorTrack",
+    "_binding": {
+      "__type__": "cc.animation.TrackBinding",
+      "path": {
+        "__type__": "cc.animation.TrackPath",
+        "_paths": [
+          {
+            "__type__": "cc.animation.HierarchyPath",
+            "path": "Beetle/FrontL"
+          },
+          "eulerAngles"
+        ]
+      },
+      "proxy": null
+    },
+    "_channels": [
+      {
+        "__id__": 17
+      },
+      {
+        "__id__": 18
+      },
+      {
+        "__id__": 19
+      },
+      {
+        "__id__": 20
+      }
+    ],
+    "_nComponents": 3
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 16,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -16,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.VectorTrack",
+    "_binding": {
+      "__type__": "cc.animation.TrackBinding",
+      "path": {
+        "__type__": "cc.animation.TrackPath",
+        "_paths": [
+          {
+            "__type__": "cc.animation.HierarchyPath",
+            "path": "Beetle/FrontR"
+          },
+          "eulerAngles"
+        ]
+      },
+      "proxy": null
+    },
+    "_channels": [
+      {
+        "__id__": 22
+      },
+      {
+        "__id__": 23
+      },
+      {
+        "__id__": 24
+      },
+      {
+        "__id__": 25
+      }
+    ],
+    "_nComponents": 3
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -16,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 16,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.VectorTrack",
+    "_binding": {
+      "__type__": "cc.animation.TrackBinding",
+      "path": {
+        "__type__": "cc.animation.TrackPath",
+        "_paths": [
+          {
+            "__type__": "cc.animation.HierarchyPath",
+            "path": "Ball"
+          },
+          "position"
+        ]
+      },
+      "proxy": null
+    },
+    "_channels": [
+      {
+        "__id__": 27
+      },
+      {
+        "__id__": 28
+      },
+      {
+        "__id__": 29
+      },
+      {
+        "__id__": 30
+      }
+    ],
+    "_nComponents": 3
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 4,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": -4,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 236,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 239,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 236,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 239,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 236,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.RealCurve",
+      "_times": [
+        0.0,
+        0.2,
+        0.4,
+        0.6,
+        0.8
+      ],
+      "_values": [
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        },
+        {
+          "__type__": "cc.RealKeyframeValue",
+          "interpolationMode": 0,
+          "tangentWeightMode": 0,
+          "value": 0.0,
+          "rightTangent": 0,
+          "rightTangentWeight": 0,
+          "leftTangent": 0,
+          "leftTangentWeight": 0,
+          "easingMethod": 0
+        }
+      ],
+      "preExtrapolation": 1,
+      "postExtrapolation": 1
+    }
+  },
+  {
+    "__type__": "cc.animation.ObjectTrack",
+    "_binding": {
+      "__type__": "cc.animation.TrackBinding",
+      "path": {
+        "__type__": "cc.animation.TrackPath",
+        "_paths": [
+          {
+            "__type__": "cc.animation.HierarchyPath",
+            "path": "Beetle/FrontL"
+          },
+          {
+            "__type__": "cc.animation.ComponentPath",
+            "component": "cc.Sprite"
+          },
+          "spriteFrame"
+        ]
+      },
+      "proxy": null
+    },
+    "_channel": {
+      "__id__": 32
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.ObjectCurve",
+      "_times": [
+        0.0,
+        0.13333333333333333,
+        0.26666666666666666,
+        0.4000000000000001,
+        0.5333333333333333,
+        0.6666666666666666,
+        0.8000000000000002
+      ],
+      "_values": [
+        {
+          "__uuid__": "2acb7693-b410-5fec-a70c-bcf60012cc59@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "3bf264aa-c36d-57ab-a7a8-2f2a54268440@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "fa1a11a8-5ec4-57db-9db9-5a6d9fa9e6db@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "3a214a2d-64bc-57d0-b1c6-36ee43d52a76@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "a4239335-b432-52b7-9eb2-f01b8a7ea9e6@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "f26d6abb-bb7a-503e-adab-12a424f1c058@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "2acb7693-b410-5fec-a70c-bcf60012cc59@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        }
+      ]
+    }
+  },
+  {
+    "__type__": "cc.animation.ObjectTrack",
+    "_binding": {
+      "__type__": "cc.animation.TrackBinding",
+      "path": {
+        "__type__": "cc.animation.TrackPath",
+        "_paths": [
+          {
+            "__type__": "cc.animation.HierarchyPath",
+            "path": "Beetle/FrontR"
+          },
+          {
+            "__type__": "cc.animation.ComponentPath",
+            "component": "cc.Sprite"
+          },
+          "spriteFrame"
+        ]
+      },
+      "proxy": null
+    },
+    "_channel": {
+      "__id__": 34
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.ObjectCurve",
+      "_times": [
+        0.0,
+        0.13333333333333333,
+        0.26666666666666666,
+        0.4000000000000001,
+        0.5333333333333333,
+        0.6666666666666666,
+        0.8000000000000002
+      ],
+      "_values": [
+        {
+          "__uuid__": "fa1a11a8-5ec4-57db-9db9-5a6d9fa9e6db@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "3a214a2d-64bc-57d0-b1c6-36ee43d52a76@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "a4239335-b432-52b7-9eb2-f01b8a7ea9e6@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "f26d6abb-bb7a-503e-adab-12a424f1c058@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "2acb7693-b410-5fec-a70c-bcf60012cc59@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "3bf264aa-c36d-57ab-a7a8-2f2a54268440@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "fa1a11a8-5ec4-57db-9db9-5a6d9fa9e6db@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        }
+      ]
+    }
+  },
+  {
+    "__type__": "cc.animation.ObjectTrack",
+    "_binding": {
+      "__type__": "cc.animation.TrackBinding",
+      "path": {
+        "__type__": "cc.animation.TrackPath",
+        "_paths": [
+          {
+            "__type__": "cc.animation.HierarchyPath",
+            "path": "Ball"
+          },
+          {
+            "__type__": "cc.animation.ComponentPath",
+            "component": "cc.Sprite"
+          },
+          "spriteFrame"
+        ]
+      },
+      "proxy": null
+    },
+    "_channel": {
+      "__id__": 36
+    }
+  },
+  {
+    "__type__": "cc.animation.Channel",
+    "_curve": {
+      "__type__": "cc.ObjectCurve",
+      "_times": [
+        0.0,
+        0.05,
+        0.1,
+        0.15000000000000002,
+        0.2,
+        0.25,
+        0.30000000000000004,
+        0.35000000000000003,
+        0.4,
+        0.45,
+        0.5,
+        0.55,
+        0.6000000000000001,
+        0.65,
+        0.7000000000000001,
+        0.75,
+        0.8
+      ],
+      "_values": [
+        {
+          "__uuid__": "08738da1-bffd-564a-97bd-8594e56c4391@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "a80ee830-18ea-5bf8-afab-297293a8713d@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "5d92a11d-8ac8-51cc-bfa3-d37df8d21939@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "6c9a8ca7-1003-55ae-a2d1-138ee4ed55dd@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "831e4a33-d04b-5459-942f-b678d062f922@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "44f3c3a5-f30d-5ca7-8569-63aafff035dc@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "63f6daa7-3e58-5010-9958-fa6124a8aec2@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "22cf33fb-57da-5d1a-9801-c93371c8c715@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "21540cfa-8772-54cc-9055-b3e779906eb2@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "43852235-4b76-5f68-84db-552b419f2939@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "7b475286-7213-5825-8642-f53f8c5597d1@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "15b46de1-c911-5090-9b14-e7b20aaa3d3a@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "bd35f23d-2ab3-5f29-8e19-9b690b3dffa9@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "c001496d-6f39-5820-bd9f-07268bd3abf3@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "ecba07c6-8f11-5c8b-88eb-889a3b2d154e@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "58259f77-b3c8-5236-a3cd-7390f9f8a7f5@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        },
+        {
+          "__uuid__": "08738da1-bffd-564a-97bd-8594e56c4391@f9941",
+          "__expectedType__": "cc.SpriteFrame"
+        }
+      ]
+    }
+  }
+]

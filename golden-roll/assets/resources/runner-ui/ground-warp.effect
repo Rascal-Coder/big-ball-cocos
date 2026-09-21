@@ -1,0 +1,61 @@
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: ground-vs:vert
+      frag: ground-fs:frag
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      rasterizerState:
+        cullMode: none
+      properties:
+        nearCorners: { value: [-1, -1, 1, -1] }
+        farCorners: { value: [-0.8, 1, 0.8, 1] }
+        uvRect: { value: [0, 0, 1, 1] }
+}%
+
+CCProgram ground-vs %{
+  precision highp float;
+  #include <builtin/uniforms/cc-global>
+  in vec3 a_position;
+  in vec2 a_texCoord;
+  in vec4 a_color;
+  out vec2 uv0;
+  out vec4 color;
+  vec4 vert () {
+    uv0 = a_texCoord;
+    color = a_color;
+    return cc_matViewProj * vec4(a_position, 1.0);
+  }
+}%
+
+CCProgram ground-fs %{
+  precision highp float;
+  in vec2 uv0;
+  in vec4 color;
+  uniform GroundParams {
+    vec4 nearCorners;
+    vec4 farCorners;
+    vec4 uvRect;
+  };
+  #pragma builtin(local)
+  layout(set = 2, binding = 12) uniform sampler2D cc_spriteTexture;
+  vec4 frag () {
+    // The Sprite is a bounding rectangle. Remap its pixels into a projected band.
+    float across = mix(min(nearCorners.x, farCorners.x), max(nearCorners.z, farCorners.z), uv0.x);
+    float left = mix(farCorners.x, nearCorners.x, uv0.y);
+    float right = mix(farCorners.z, nearCorners.z, uv0.y);
+    float u = (across - left) / max(0.001, right - left);
+    if (u < 0.0 || u > 1.0) discard;
+    vec2 sampleUV = mix(uvRect.xy, uvRect.zw, vec2(u, uv0.y));
+    // Mirrored repeat is continuous even when generated edges are not pixel-identical.
+    sampleUV = 1.0 - abs(1.0 - mod(sampleUV, 2.0));
+    return texture(cc_spriteTexture, sampleUV) * color;
+  }
+}%

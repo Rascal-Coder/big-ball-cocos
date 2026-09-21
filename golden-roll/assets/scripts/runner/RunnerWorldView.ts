@@ -2,25 +2,21 @@ import { _decorator, Component, Node, Prefab } from 'cc';
 import { NodePool } from '../core/NodePool';
 import { RunnerAssets } from './RunnerAssets';
 import { RunnerItemView } from './RunnerItemView';
-import { PLAYER_Y, RunnerModel } from './RunnerModel';
+import { GROUND_STEP, hazeColor, projectBand, projectSprite, TILE } from './RunnerProjection';
+import { RunnerModel } from './RunnerModel';
 
 const { ccclass, property } = _decorator;
 
-const TILE = 145;
-const COLS = [-2, -1, 0, 1, 2] as const;
-const SLOTS = 14;
-const ORIGIN_Y = -900;
+const SLOTS = 64;
+const BACK_ROWS = 7;
+const PATH_HALF = TILE * 1.28;
+const SAND_OUTER = TILE * 5.2;
+const DECO_COLS = [-3, -2, 2, 3] as const;
 const SIDE_DECO = ['cactus-saguaro', 'agave', 'bush', 'skull-post', 'fence-h', 'rock-pile'] as const;
-const SIDE_GROUND = ['sand-plain', 'sand-cracks'] as const;
 
-type Slot = {
-    col: number;
-    index: number;
-    tile: RunnerItemView;
-    deco: RunnerItemView;
-    tileArt: string;
-    decoArt: string;
-};
+type Band = { view: RunnerItemView; art: string };
+type Deco = { col: number; view: RunnerItemView; art: string };
+type Row = { index: number; left: Band; path: Band; right: Band; decos: Deco[] };
 
 function cellHash(col: number, row: number, salt = 0): number {
     let n = (row + 19) * 374761393 + (col + 7) * 668265263 + salt * 1274126177;
@@ -28,19 +24,9 @@ function cellHash(col: number, row: number, salt = 0): number {
     return n >>> 0;
 }
 
-function tileArt(col: number, row: number): string {
-    if (Math.abs(col) < 2) {
-        return 'path-ns';
-    }
-    return SIDE_GROUND[cellHash(col, row) % SIDE_GROUND.length];
-}
-
 function decoArt(col: number, row: number): string {
-    if (Math.abs(col) !== 2) {
-        return '';
-    }
     const n = cellHash(col, row, 91);
-    if (n % 100 > 58) {
+    if (n % 100 > (Math.abs(col) === 2 ? 52 : 70)) {
         return '';
     }
     return SIDE_DECO[n % SIDE_DECO.length];
@@ -59,13 +45,26 @@ function decoSize(id: string): { w: number; h: number } {
     return { w: 73, h: 86 };
 }
 
+function itemSize(kind: string, art: string): { w: number; h: number; lift: number } {
+    if (kind === 'coin') {
+        return { w: 42, h: 48, lift: 22 };
+    }
+    if (art === 'cart') {
+        return { w: 120, h: 120, lift: 36 };
+    }
+    if (kind === 'obstacle') {
+        return { w: 106, h: 106, lift: 32 };
+    }
+    return { w: 54, h: 54, lift: 24 };
+}
+
 @ccclass('RunnerWorldView')
 export class RunnerWorldView extends Component {
     @property(Node) terrainRoot: Node = null!;
     @property(Node) itemRoot: Node = null!;
     @property(Prefab) itemPrefab: Prefab = null!;
     private pool = new NodePool();
-    private slots: Slot[] = [];
+    private rows: Row[] = [];
     private active = new Map<number, RunnerItemView>();
     private initialized = false;
 
@@ -74,68 +73,97 @@ export class RunnerWorldView extends Component {
     }
 
     reset(): void {
+        if (this.rows.length && this.rows.length !== SLOTS) {
+            this.rows.forEach((row) => {
+                this.pool.release('item', row.left.view.node);
+                this.pool.release('item', row.path.view.node);
+                this.pool.release('item', row.right.view.node);
+                row.decos.forEach((deco) => this.pool.release('item', deco.view.node));
+            });
+            this.rows = [];
+            this.initialized = false;
+        }
         if (!this.initialized) {
             this.pool.register('item', this.itemPrefab);
-            const pending: Array<{ col: number; index: number; tile: RunnerItemView }> = [];
-            for (let index = 0; index < SLOTS; index += 1) {
-                for (const col of COLS) {
-                    pending.push({ col, index, tile: this.acquire(this.terrainRoot) });
-                }
-            }
-            for (const cell of pending) {
-                this.slots.push({
-                    col: cell.col,
-                    index: cell.index,
-                    tile: cell.tile,
-                    deco: this.acquire(this.terrainRoot),
-                    tileArt: '',
-                    decoArt: '',
+            for (let index = SLOTS - 1; index >= 0; index -= 1) {
+                this.rows.push({
+                    index,
+                    left: { view: this.acquire(this.terrainRoot), art: '' },
+                    path: { view: this.acquire(this.terrainRoot), art: '' },
+                    right: { view: this.acquire(this.terrainRoot), art: '' },
+                    decos: DECO_COLS.map((col) => ({ col, view: this.acquire(this.terrainRoot), art: '' })),
                 });
             }
             this.initialized = true;
+            this.node.parent?.children.forEach((child) => {
+                if (child.name === 'CanyonEdge') {
+                    child.active = false;
+                }
+            });
         }
         this.active.forEach((view) => this.pool.release('item', view.node));
         this.active.clear();
-        this.slots.forEach((slot) => {
-            slot.tileArt = '';
-            slot.decoArt = '';
+        this.rows.forEach((row) => {
+            row.left.art = '';
+            row.path.art = '';
+            row.right.art = '';
+            row.decos.forEach((deco) => { deco.art = ''; });
         });
     }
 
     render(run: RunnerModel): void {
-        const scroll = ((run.travel % TILE) + TILE) % TILE;
-        const base = Math.floor(run.travel / TILE);
-        for (const slot of this.slots) {
-            const row = base + slot.index;
-            const x = slot.col * TILE;
-            const y = slot.index * TILE + ORIGIN_Y - scroll;
-            slot.tile.setPosition(x, y);
-            this._paintTile(slot, tileArt(slot.col, row));
-            const art = decoArt(slot.col, row);
-            if (!art) {
-                slot.deco.node.active = false;
-                slot.decoArt = '';
-                continue;
+        const scroll = ((run.travel % GROUND_STEP) + GROUND_STEP) % GROUND_STEP;
+        for (const row of this.rows) {
+            const strip = Math.floor(run.travel / GROUND_STEP) + row.index - BACK_ROWS;
+            const worldRow = Math.floor(strip / 4);
+            const depth = row.index * GROUND_STEP - scroll - BACK_ROWS * GROUND_STEP;
+            const path = projectBand(-PATH_HALF, PATH_HALF, depth);
+            const left = projectBand(-SAND_OUTER, -PATH_HALF + 3, depth);
+            const right = projectBand(PATH_HALF - 3, SAND_OUTER, depth);
+            const visible = path.z > 0.16 && path.bl.y < 380;
+            const v = ((strip % 32) + 32) % 32 / 16;
+            const uv = { u0: 0, v0: 1 - v - 1 / 16, u1: 1, v1: 1 - v };
+            this._paintBand(row.path, 'path-ns', path, depth, visible, uv, true);
+            this._paintBand(row.left, 'sand-plain', left, depth, visible, uv, false);
+            this._paintBand(row.right, 'sand-plain', right, depth, visible, uv, false);
+            for (const deco of row.decos) {
+                const art = visible && strip % 4 === 0 && path.z > 0.18 ? decoArt(deco.col, worldRow) : '';
+                if (!art) {
+                    deco.view.node.active = false;
+                    deco.art = '';
+                    continue;
+                }
+                const size = decoSize(art);
+                const pose = projectSprite(deco.col * TILE, depth + TILE * 0.35, size.h * 0.5);
+                deco.view.node.active = true;
+                this._paintDeco(deco, art);
+                deco.view.setPose(pose.x, pose.y, pose.s, pose.s, depth + 1);
+                const tint = hazeColor(pose.z);
+                deco.view.setTint(tint.r, tint.g, tint.b, tint.a);
             }
-            slot.deco.node.active = true;
-            slot.deco.setPosition(x, y + 8);
-            this._paintDeco(slot, art);
         }
         const alive = new Set<number>();
         for (const item of run.items) {
-            const y = PLAYER_Y + item.y - run.travel;
-            if (y > 780 || y < -780) {
+            const depth = item.y - run.travel;
+            if (depth < -90 || depth > 2100) {
+                continue;
+            }
+            const size = itemSize(item.kind, item.art);
+            const pulse = item.kind === 'coin' ? 0.86 + Math.sin(run.time * 8 + item.id) * 0.14 : 1;
+            const pose = projectSprite(item.x, depth, item.kind === 'obstacle' ? size.h * 0.5 : size.lift);
+            if (pose.z < 0.14 || pose.y > 380) {
                 continue;
             }
             alive.add(item.id);
             let view = this.active.get(item.id);
             if (!view) {
                 view = this.acquire(this.itemRoot);
-                const size = item.kind === 'obstacle' ? (item.art === 'cart' ? 120 : 106) : item.kind === 'coin' ? 42 : 54;
-                view.setData(RunnerAssets.frames.get(item.art)!, size, item.kind === 'coin' ? 48 : size, item.kind === 'coin');
+                view.setData(RunnerAssets.frames.get(item.art)!, size.w, size.h);
                 this.active.set(item.id, view);
             }
-            view.setPosition(item.x, y);
+            const tint = hazeColor(pose.z);
+            view.setPose(pose.x, pose.y, pose.s * pulse, pose.s * pulse, depth);
+            view.setTint(tint.r, tint.g, tint.b, tint.a);
         }
         for (const [id, view] of this.active) {
             if (!alive.has(id)) {
@@ -143,6 +171,8 @@ export class RunnerWorldView extends Component {
                 this.active.delete(id);
             }
         }
+        const ordered = [...this.active.values()].sort((a, b) => b.depth - a.depth);
+        ordered.forEach((view, index) => view.node.setSiblingIndex(index));
     }
 
     setPaused(paused: boolean): void {
@@ -153,29 +183,43 @@ export class RunnerWorldView extends Component {
         this.pool.clear();
     }
 
-    private _paintTile(slot: Slot, art: string): void {
-        if (slot.tileArt === art) {
+    private _paintBand(
+        band: Band,
+        art: string,
+        quad: ReturnType<typeof projectBand>,
+        depth: number,
+        visible: boolean,
+        uv: { u0: number; v0: number; u1: number; v1: number },
+        isPath = false,
+    ): void {
+        band.view.node.active = visible;
+        if (!visible) {
             return;
         }
-        const frame = RunnerAssets.frames.get(art);
-        if (!frame) {
-            return;
+        if (band.art !== art) {
+            const frame = RunnerAssets.frames.get(art);
+            if (!frame) {
+                return;
+            }
+            band.view.setData(frame, 148, 149);
+            band.art = art;
         }
-        slot.tile.setData(frame, 148, 149);
-        slot.tileArt = art;
+        const tint = hazeColor(quad.z, isPath);
+        band.view.setTrapezoid(quad.bl, quad.br, quad.tl, quad.tr, depth, uv);
+        band.view.setTint(tint.r, tint.g, tint.b, tint.a);
     }
 
-    private _paintDeco(slot: Slot, art: string): void {
-        if (slot.decoArt === art) {
+    private _paintDeco(deco: Deco, art: string): void {
+        if (deco.art === art) {
             return;
         }
         const frame = RunnerAssets.frames.get(art);
         if (!frame) {
-            slot.deco.node.active = false;
+            deco.view.node.active = false;
             return;
         }
         const size = decoSize(art);
-        slot.deco.setData(frame, size.w, size.h);
-        slot.decoArt = art;
+        deco.view.setData(frame, size.w, size.h);
+        deco.art = art;
     }
 }

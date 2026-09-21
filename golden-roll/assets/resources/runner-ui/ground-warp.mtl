@@ -1,0 +1,23 @@
+{
+  "__type__": "cc.Material",
+  "_name": "ground-warp",
+  "_objFlags": 0,
+  "__editorExtras__": {},
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "e6ceecaf-ec47-599b-9212-ecb2696f1805",
+    "__expectedType__": "cc.EffectAsset"
+  },
+  "_techIdx": 0,
+  "_defines": [
+    {
+      "USE_TEXTURE": true
+    }
+  ],
+  "_states": [
+    {}
+  ],
+  "_props": [
+    {}
+  ]
+}

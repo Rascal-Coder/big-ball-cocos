@@ -1,0 +1,127 @@
+固定规则（每张图都遵守）
+风格（整段复制到每条提示词最前面）
+
+Western sunset desert mobile-game sprite. Soft painted clay / toy-3D, warm sand and wood, gentle subsurface shading, clean silhouette. Golden-hour key light from upper-left-behind. No text, no UI, no watermark, no logo, no background scene.
+相机（角色和装饰共用，地面除外）
+
+机位：角色正后方，俯角约 28°
+看见：背面 + 一点点顶面
+禁止：正俯视、等距钻石格、纯侧面、正脸宣传图
+禁止：把梯形透视、地平线、整条路画进素材
+技术
+
+类型	画布	背景	锚点	一张图几个物体
+地面
+1024×1024
+铺满，无透明
+无（整张纹理）
+只许纹理，不许物体
+装饰 / 障碍
+1024×1024
+透明
+脚在画布下方约 15%
+1
+甲虫零件
+1024×1024
+透明
+肚子贴球的那一点在画面中下
+1
+球
+1024×1024
+透明
+球心居中
+1
+禁止（写进每条提示词末尾）
+
+Forbidden: isometric diamond tile, top-down map icon, rounded tile border, stone frame around the image, baked perspective trapezoid, full environment, horizon, UI, text, watermark, character and ball merged into one sprite, looking straight down into a hat crown.
+角色专项（已改）
+
+甲虫 趴在球顶，不站地、不推球
+甲虫和球必须分开出图，不要画在同一张里（球要单独转、变大、换皮）
+身体一张静帧即可；前足画死在身上
+帽子单独一张，换皮只换帽
+后腿可选，第一期可以不出
+不要骨骼、不要六腿走路条、不要推球发力姿势
+1. 地面（俯视无缝，引擎再拉透视）
+sand-plain
+
+[Style Lock]
+Seamless tileable desert sand ground texture, 1024x1024, orthographic top-down (straight down). Flat sandy dirt, fine grain, a few tiny pebbles and faint cracks, even density to all four edges. Must tile seamlessly. No rounded corners, no stone border, no frame, no path, no plants, no objects, no horizon, no vignette.
+[Forbidden]
+path-ns（整张都是路，不要中间一条）
+
+[Style Lock]
+Seamless tileable desert dirt ROAD texture, 1024x1024, orthographic top-down. Worn pale packed sand filling the ENTIRE square, faint wheel ruts, sparse small stones. Must tile seamlessly into a long road. No thin center strip, no left/right rock frames, no rounded corners, no plants, no objects, no horizon.
+[Forbidden]
+变体只改中间物：scattered pebbles → sand-pebbles；dry cracks → sand-cracks；faint tracks → sand-tracks。
+
+2. 装饰 / 障碍（3/4 背面立牌）
+下面这段 Prop Lock 每条装饰都加：
+
+Isolated game sprite, transparent background. Camera behind a runner, 3/4 rear-elevated, about 28 degrees above ground. We see the back and a little of the top. Object stands upright. Tiny contact shadow under the base only. Centered, feet near the bottom 15% of the canvas. No ground plane, no other objects. Not top-down, not isometric, not side view.
+cactus-saguaro
+
+[Style Lock] [Prop Lock]
+One tall saguaro cactus with two upward arms.
+[Forbidden]
+fence-h
+
+[Style Lock] [Prop Lock]
+Short western two-rail wooden fence, two posts, 3/4 rear so we see the back of the rails. Stands upright, not lying flat.
+[Forbidden]
+cart
+
+[Style Lock] [Prop Lock]
+Old western wooden cart, one large spoked wheel visible, empty crate bed. We see the back corner; do not look straight down into the crate.
+[Forbidden]
+skull-post
+
+[Style Lock] [Prop Lock]
+Weathered bull skull on two short wooden posts with rope. Skull turned slightly so it has volume, not a flat icon.
+[Forbidden]
+rock-pile
+
+[Style Lock] [Prop Lock]
+Small pile of desert rocks, readable as a 3D heap blocking a lane.
+[Forbidden]
+agave / bush
+
+[Style Lock] [Prop Lock]
+One desert agave (or one round desert bush), upright plant.
+[Forbidden]
+3. 角色（这次改过：趴球、无骨骼）
+beetle-body（主图，不含球、不含帽也可以，建议帽分开）
+
+[Style Lock]
+Isolated game sprite, transparent background. A cute dung beetle PERCHED as if sitting on top of an invisible sphere. Crouched / belly-down riding pose, legs tucked onto the unseen ball, not standing on the ground, not pushing a ball. Camera: 3/4 rear-elevated, 28 degrees, we see the BACK of the glossy brown oval shell and the back of the body. Six short legs folded on the sphere surface; front legs may be painted onto the body. Red bandana around the neck. NO hat in this image. NO ball in this image. Tiny contact shadow optional under the belly. Not top-down, do not look down into the body like a disc. Generous padding, subject in the lower-middle of the canvas.
+[Forbidden]
+hat（换皮只换这个）
+
+[Style Lock]
+Isolated game sprite, transparent background. One brown cowboy hat with a braided band and a small gold star. Same 28-degree 3/4 REAR camera: we see the back of the brim and the crown from behind-above, NOT the hollow inside of the hat from straight above. No head, no beetle, no ball. Clean cutout.
+[Forbidden]
+bandana（可选；也可画死在 body 上）
+
+[Style Lock]
+Isolated red cowboy bandana / neckerchief, 3/4 rear view, tied at the back of an unseen neck. Transparent background, no body, no hat, no ball.
+[Forbidden]
+后腿 hind-l / hind-r（第一期可跳过）
+
+[Style Lock]
+Isolated single dung-beetle hind leg, 3/4 rear view, tucked as if gripping a sphere. Transparent background. One leg only, no body, no ball. Left hind (or right hind).
+[Forbidden]
+ball-earth（现有球能用；要统一光照再出）
+
+[Style Lock]
+Isolated perfectly round dung / hay ball, cracked dry mud with straw and tiny pebbles. Sphere centered, even lighting from upper-left-behind, transparent background. No beetle, no shadow environment, no ground plane. Must stay a clean circle.
+[Forbidden]
+布局校对图（不要当游戏素材）
+
+[Style Lock]
+The same rear-view dung beetle perched ON TOP of a large dung ball, cowboy hat and red bandana. Ball lower and larger; beetle sitting on the upper back of the ball. 28-degree 3/4 rear camera. This is a layout check only.
+出图顺序
+sand-plain + path-ns + cactus-saguaro — 先看地面还歪不歪、立牌站不站
+beetle-body + hat + 现有球叠在一起 — 看趴姿和 28° 是否统一
+再批量：fence-h、cart、skull-post、rock-pile、agave、bush
+后腿、球换皮放到后面
+一张图只出一样。白底就去底。地面用「偏移一半」检查四边能否无缝。

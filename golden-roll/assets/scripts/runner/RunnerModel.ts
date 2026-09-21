@@ -3,9 +3,9 @@ export type Power = 'magnet' | 'shield' | 'boot';
 export type RunState = 'ready' | 'running' | 'paused' | 'over';
 export interface RunItem {
     id: number; x: number; y: number; kind: 'coin' | 'obstacle' | 'heart' | Power;
-    art: string; radius: number; taken: boolean;
+    art: string; radius: number; taken: boolean; cleared?: boolean;
 }
-export interface RunEvent { type: 'coin' | 'hit' | 'shield' | 'power' | 'mission'; x: number; }
+export interface RunEvent { type: 'coin' | 'hit' | 'shield' | 'power' | 'mission' | 'jump' | 'land'; x: number; }
 export const LANES = [-145, 0, 145];
 export const PLAYER_Y = -250;
 
@@ -17,6 +17,12 @@ export class RunnerModel {
     coins = 0;
     lives = 3;
     time = 0;
+    height = 0;
+    weight = 12;
+    private verticalSpeed = 0;
+    private jumpCooldown = 0;
+    get ballScale(): number { return 1 + (this.weight - 12) / 220; }
+    get airborne(): boolean { return this.height > 0 || this.verticalSpeed > 0; }
     invulnerable = 0;
     missionComplete = false;
     powers: Record<Power, number> = { magnet: 0, shield: 0, boot: 0 };
@@ -35,6 +41,7 @@ export class RunnerModel {
         this.seed = seed >>> 0 || 1;
         this.state = 'running'; this.lane = 1; this.x = 0; this.travel = 0;
         this.coins = 0; this.lives = 3; this.time = 0; this.invulnerable = 0;
+        this.height = 0; this.weight = 12; this.verticalSpeed = 0; this.jumpCooldown = 0;
         this.missionComplete = false; this.items = []; this.events = [];
         this.powers = { magnet: 0, shield: 0, boot: 0 };
         this.charges = { magnet: 1, shield: 1, boot: 1 };
@@ -45,6 +52,12 @@ export class RunnerModel {
         if (this.state === 'running') this.lane = Math.max(0, Math.min(2, this.lane + Math.sign(direction)));
     }
     pause(): void { if (this.state === 'running') this.state = 'paused'; }
+    jump(): boolean {
+        if (this.state !== 'running' || this.airborne || this.jumpCooldown > 0) return false;
+        this.verticalSpeed = 620; this.jumpCooldown = 0.16;
+        this.events.push({ type: 'jump', x: this.x });
+        return true;
+    }
     resume(): void { if (this.state === 'paused') this.state = 'running'; }
     use(power: Power): boolean {
         if (this.state !== 'running' || this.charges[power] <= 0 || this.powers[power] > 0) return false;
@@ -65,22 +78,40 @@ export class RunnerModel {
     }
     private step(dt: number): void {
         this.time += dt;
+        this.jumpCooldown = Math.max(0, this.jumpCooldown - dt);
+        if (this.airborne) {
+            this.height = Math.max(0, this.height + this.verticalSpeed * dt - 700 * dt * dt);
+            this.verticalSpeed -= 1400 * dt;
+            if (this.height === 0 && this.verticalSpeed < 0) {
+                this.verticalSpeed = 0;
+                this.events.push({ type: 'land', x: this.x });
+            }
+        }
         this.invulnerable = Math.max(0, this.invulnerable - dt);
         for (const key of ['magnet', 'shield', 'boot'] as Power[]) this.powers[key] = Math.max(0, this.powers[key] - dt);
         this.x += (LANES[this.lane] - this.x) * (1 - Math.exp(-18 * dt));
         this.travel += this.speed * dt;
+        this.weight = Math.min(100, this.weight + dt * 0.12);
         this.spawnAhead();
         for (const item of this.items) {
-            if (item.taken) continue;
+            if (item.taken || item.cleared) continue;
             const dy = item.y - this.travel;
             if (item.kind === 'coin' && this.powers.magnet > 0 && Math.abs(dy) < 255) {
                 item.x += (this.x - item.x) * Math.min(1, dt * 10);
             }
-            const radius = item.radius + 32;
-            if (Math.abs(dy) > radius || Math.hypot(item.x - this.x, dy) > radius) continue;
+            if (item.kind === 'obstacle') {
+                if (Math.abs(item.x - this.x) > item.radius + 32 || Math.abs(dy) > 36) continue;
+                if (this.height > (item.art === 'cart' ? 76 : 48)) {
+                    item.cleared = true;
+                    continue;
+                }
+            } else {
+                const radius = item.radius + 32;
+                if (Math.abs(dy) > radius || Math.hypot(item.x - this.x, dy) > radius) continue;
+            }
             item.taken = true;
             if (item.kind === 'coin') {
-                this.coins++; this.events.push({ type: 'coin', x: item.x });
+                this.coins++; this.weight = Math.min(100, this.weight + 0.65); this.events.push({ type: 'coin', x: item.x });
                 if (this.coins >= 50 && !this.missionComplete) {
                     this.missionComplete = true; this.events.push({ type: 'mission', x: this.x });
                 }
@@ -94,7 +125,7 @@ export class RunnerModel {
                     this.invulnerable = 0.35;
                     this.events.push({ type: 'shield', x: this.x });
                 } else {
-                    this.lives--; this.invulnerable = 1.6;
+                    this.lives--; this.weight = Math.max(12, this.weight - 8); this.invulnerable = 1.6;
                     this.events.push({ type: 'hit', x: this.x });
                     if (this.lives === 0) this.state = 'over';
                 }
